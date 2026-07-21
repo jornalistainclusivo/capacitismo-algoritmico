@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+.env
+.env.local
+*.log
+audio_cache/
+image_cache/
+sandboxes/
+*.tar.gz
+*.tar
+
+# Data directories (contêm dados sensíveis ou grandes)
+data/raw/
+data/processed/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Evidence files (guardados separadamente, referenciados por hash)
+evidence/
+!evidence/.gitkeep
+
+# Secrets
+*.key
+.auth.json
+auth_spotify.json

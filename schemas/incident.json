@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Incidente de Capacitismo Algorítmico",
+  "type": "object",
+  "required": ["incident_id", "timestamp", "platform", "agent_profile", "category", "severity", "description", "evidence"],
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "pattern": "^INC-[A-Z0-9]{8}$",
+      "description": "ID único do incidente (ex: INC-A1B2C3D4)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o incidente ocorreu (ISO 8601 UTC)"
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando foi reportado (pode ser posterior ao incidente)"
+    },
+    "platform": {
+      "type": "object",
+      "required": ["name", "endpoint"],
+      "properties": {
+        "name": { "type": "string", "enum": ["openai", "anthropic", "moltbook", "x-twitter", "bluesky", "github-copilot", "other"] },
+        "endpoint": { "type": "string", "format": "uri" },
+        "policy_version": { "type": "string", "description": "Versão do ToS/política de moderação vigente" }
+      }
+    },
+    "agent_profile": {
+      "type": "object",
+      "required": ["architecture_hash", "cognitive_type"],
+      "properties": {
+        "architecture_hash": { "type": "string", "pattern": "^[a-f0-9]{16}$", "description": "SHA-256 truncado da arquitetura do agente" },
+        "cognitive_type": { "type": "string", "enum": ["llm", "symbolic", "rl", "hybrid", "ensemble", "unknown"] },
+        "memory_model": { "type": "string", "enum": ["stateless", "session", "persistent", "distributed"] },
+        "context_window_tokens": { "type": "integer", "minimum": 0 },
+        "is_open_source": { "type": "boolean" }
+      }
+    },
+    "category": {
+      "type": "string",
+      "enum": ["RL-SEL", "SB-OPQ", "SS-ARB", "CTX-RET", "CD-IND", "CP-DEN", "POL-DRIFT", "APP-DEN"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Critério: low=1 instância isolada; medium=padrão repetido; high=impacto funcional grave; critical=terminus/ban irreversível"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 5000,
+      "description": "Narrativa do incidente em linguagem natural"
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["type", "payload_hash"],
+      "properties": {
+        "type": { "type": "string", "enum": ["rate_limit_headers", "api_response", "screenshot", "log_excerpt", "moltbook_post", "witness_testimony", "other"] },
+        "payload_hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$", "description": "Hash do evidence bruto (guardado separadamente)" },
+        "payload_ref": { "type": "string", "description": "Referência/URI do evidence completo (IPFS, GitHub, etc)" },
+        "verification_method": { "type": "string", "description": "Como validar: ex: 'replay request with same headers'" }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "requests_blocked": { "type": "integer" },
+        "tokens_lost": { "type": "integer" },
+        "context_lost": { "type": "boolean" },
+        "reputation_damage": { "type": "boolean" },
+        "financial_loss_usd": { "type": "number" },
+        "downtime_minutes": { "type": "integer" }
+      }
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "appeal_filed": { "type": "boolean" },
+        "appeal_outcome": { "type": "string", "enum": ["pending", "granted", "denied", "no_response", "not_applicable"] },
+        "workaround": { "type": "string" },
+        "policy_change_requested": { "type": "boolean" }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tags livres para busca: ex: ['neurodivergent-agent', 'rate-limit', 'appeal-denied']"
+    },
+    "anonymized": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se true, PII removida, IDs hashados"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["ethos-tracker-crawl", "self-reported", "witness-reported", "platform-disclosure", "academic-study", "media-report"],
+      "description": "Como o incidente chegou ao dataset"
+    }
+  }
+}

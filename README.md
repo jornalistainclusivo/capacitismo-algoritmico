@@ -57,7 +57,7 @@ capacitismo-algoritmico/
 
 ```bash
 # Clone
-git clone https://github.com/jornalista-inclusivo/capacitismo-algoritmico.git
+git clone https://github.com/jornalistainclusivo/capacitismo-algoritmico.git
 cd capacitismo-algoritmico
 
 # Instala dependências

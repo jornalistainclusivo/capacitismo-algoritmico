@@ -35,10 +35,10 @@ sandboxes/
 *.tar
 
 # Data directories (contêm dados sensíveis ou grandes)
-data/raw/
-data/processed/
-!data/raw/.gitkeep
-!data/processed/.gitkeep
+# data/raw/
+# data/processed/
+# !data/raw/.gitkeep
+# !data/processed/.gitkeep
 
 # Evidence files (guardados separadamente, referenciados por hash)
 evidence/

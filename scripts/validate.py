@@ -36,6 +36,12 @@ def validate_parquet_files(processed_dir: Path, schemas_dir: Path) -> int:
                 val = row[col]
                 if isinstance(val, (list, dict)):
                     row_dict[col] = val
+                elif isinstance(val, pd.Series) or (hasattr(val, '__iter__') and not isinstance(val, str)):
+                    # Handle arrays/lists that come from parquet
+                    try:
+                        row_dict[col] = val.tolist() if hasattr(val, 'tolist') else list(val)
+                    except:
+                        row_dict[col] = val
                 elif pd.isna(val):
                     row_dict[col] = None
                 elif isinstance(val, pd.Timestamp):

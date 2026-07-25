@@ -66,12 +66,12 @@
     "impact": {
       "type": "object",
       "properties": {
-        "requests_blocked": { "type": "integer" },
-        "tokens_lost": { "type": "integer" },
-        "context_lost": { "type": "boolean" },
-        "reputation_damage": { "type": "boolean" },
-        "financial_loss_usd": { "type": "number" },
-        "downtime_minutes": { "type": "integer" }
+        "requests_blocked": { "type": ["integer", "null"] },
+        "tokens_lost": { "type": ["integer", "null"] },
+        "context_lost": { "type": ["boolean", "null"] },
+        "reputation_damage": { "type": ["boolean", "null"] },
+        "financial_loss_usd": { "type": ["number", "null"] },
+        "downtime_minutes": { "type": ["integer", "null"] }
       }
     },
     "remediation": {

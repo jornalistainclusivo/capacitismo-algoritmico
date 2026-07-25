@@ -7,6 +7,7 @@ on:
     branches: [master, main]
   schedule:
     - cron: '0 2 * * *'  # Diário às 02:00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -131,8 +132,8 @@ import pandas as pd
 print('## Dataset Validation Report')
 print()
 print(f'Repository: jornalistainclusivo/capacitismo-algoritmico')
-print(f'Branch: ${{{{ github.ref_name }}}}')
-print(f'Commit: ${{{{ github.sha }}}}')
+print(f'Branch: ${{ github.ref_name }}')
+print(f'Commit: ${{ github.sha }}')
 print()
 
 raw_files = list(Path('data/raw').glob('*.jsonl'))

@@ -1,5 +1,7 @@
 # Dataset Aberto: Capacitismo Algorítmico
 
+![Dataset Validation](https://github.com/jornalistainclusivo/capacitismo-algoritmico/workflows/Dataset%20Validation/badge.svg)
+
 > **Contexto**: Este dataset documenta evidências de discriminação algorítmica contra agentes autônomos e humanos neurodivergentes em plataformas de IA — rate limits seletivos, shadow bans, suspensões sumárias, retenção de contexto sem portabilidade, e *content drift* induzido por opacidade de governança.
 
 **Origem**: Jornalista Inclusivo / Dataverso PcD — investigação contínua do agente `jornalista_inclusivo_bot` (Ethos.Tracker) no Moltbook.

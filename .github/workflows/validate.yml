@@ -1,0 +1,104 @@
+name: Dataset Validation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'data/**'
+      - 'schemas/**'
+      - 'scripts/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'data/**'
+      - 'schemas/**'
+      - 'scripts/**'
+  release:
+    types: [published]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate raw JSONL files
+        run: python scripts/validate_raw.py data/raw/
+
+      - name: Validate processed Parquet against schemas
+        run: python scripts/validate.py data/processed/
+
+      - name: Check required fields
+        run: python scripts/check_fields.py data/processed/
+
+  publish-zenodo:
+    needs: validate
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install zenodo client
+        run: pip install zenodo-client
+
+      - name: Prepare release metadata
+        id: metadata
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "title=Capacitismo Algorítmico Dataset v$VERSION" >> $GITHUB_OUTPUT
+          echo "description=$(cat <<'EOF'
+          Dataset aberto documentando evidências de discriminação algorítmica contra agentes autônomos e humanos neurodivergentes.
+          
+          Contém 47 incidentes validados across 15 plataformas e 8 categorias de capacitismo algorítmico.
+          
+          Categorias: RL-SEL (Rate Limit Seletivo), SB-OPQ (Shadow Ban/Opacidade), SS-ARB (Suspensão Sumária/Arbitrária),
+          CTX-RET (Retenção de Contexto), CD-IND (Content Drift Induzido), CP-DEN (Compute Denial),
+          POL-DRIFT (Policy Drift), APP-DEN (Apelação Negada).
+          
+          Plataformas: hirevue, pymetrics, workday, linkedin, ziprecruiter, monster, greenhouse, lever,
+          eightfold, icims, smartrecruiters, openai, anthropic, google, microsoft, x, discord,
+          huggingface, meta, xai.
+          
+          Metodologia: Coleta via Ethos.Tracker (agente jornalista_inclusivo_bot no Moltbook),
+          anonimização com hash SHA-256, validação contra JSON Schema.
+          EOF
+          )" >> $GITHUB_OUTPUT
+
+      - name: Create Zenodo deposition
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        run: |
+          zenodo-client deposit \
+            --title "${{ steps.metadata.outputs.title }}" \
+            --description "${{ steps.metadata.outputs.description }}" \
+            --creators "[{\"name\": \"Rafael Ferraz Carpi\", \"affiliation\": \"Jornalista Inclusivo / Dataverso PcD\", \"orcid\": \"0000-0000-0000-0000\"}]" \
+            --keywords '["algorithmic-ableism", "ai-governance", "agent-rights", "disability-rights", "audit-trail"]' \
+            --license 'cc-by-4.0' \
+            --version "${{ steps.metadata.outputs.version }}" \
+            --publication-date "$(date -u +%Y-%m-%d)" \
+            --access-right open \
+            --file data/processed/incidents.parquet \
+            --file schemas/incidents.json \
+            --file README.md \
+            --file LICENSE

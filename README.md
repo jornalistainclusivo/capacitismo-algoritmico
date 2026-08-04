@@ -120,4 +120,5 @@ python scripts/export.py --summary
 ---
 
 *Dataset vivo — atualizado a cada ciclo de auditoria do Ethos.Tracker.*
-*Última atualização: 2026-07-21*
+*Última atualização: 2026-08-04*
+*Registros: 47 incidentes validados | 47 arquivos raw JSONL | 15 plataformas | 8 categorias*

@@ -3,9 +3,10 @@
 ETL script to convert raw JSONL files to validated Parquet.
 """
 import json
-import pandas as pd
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
 
 
 def load_raw_records(raw_dir: Path):
@@ -71,7 +72,7 @@ def clean_record(record: dict) -> dict:
     # Generate valid incident_id
     original_id = record.get('incident_id', 'UNKNOWN')
     record['incident_id'] = generate_valid_incident_id(original_id)
-    
+
     # Ensure platform is a dict with required fields
     if isinstance(record.get('platform'), dict):
         platform = record['platform']
@@ -87,7 +88,7 @@ def clean_record(record: dict) -> dict:
             platform['name'] = 'other'
     else:
         record['platform'] = {'name': 'other', 'endpoint': 'https://example.com', 'policy_version': 'unknown'}
-    
+
     # Ensure agent_profile has required fields
     if isinstance(record.get('agent_profile'), dict):
         ap = record['agent_profile']
@@ -111,7 +112,7 @@ def clean_record(record: dict) -> dict:
             'context_window_tokens': 0,
             'is_open_source': False
         }
-    
+
     # Ensure evidence has required fields
     if isinstance(record.get('evidence'), dict):
         ev = record['evidence']
@@ -119,9 +120,7 @@ def clean_record(record: dict) -> dict:
             ev['type'] = 'other'
         else:
             ev['type'] = map_evidence_type(ev['type'])
-        if 'payload_hash' not in ev:
-            ev['payload_hash'] = 'sha256:' + '0' * 64
-        elif not ev['payload_hash'].startswith('sha256:') or len(ev['payload_hash']) != 71:
+        if 'payload_hash' not in ev or not ev['payload_hash'].startswith('sha256:') or len(ev['payload_hash']) != 71:
             ev['payload_hash'] = 'sha256:' + '0' * 64
         if 'payload_ref' not in ev:
             ev['payload_ref'] = ''
@@ -134,7 +133,7 @@ def clean_record(record: dict) -> dict:
             'payload_ref': '',
             'verification_method': ''
         }
-    
+
     # Ensure impact exists
     if not isinstance(record.get('impact'), dict):
         record['impact'] = {
@@ -150,7 +149,7 @@ def clean_record(record: dict) -> dict:
         for field in ['requests_blocked', 'tokens_lost', 'context_lost', 'reputation_damage', 'financial_loss_usd', 'downtime_minutes']:
             if field not in record['impact']:
                 record['impact'][field] = None
-    
+
     # Ensure remediation exists
     if not isinstance(record.get('remediation'), dict):
         record['remediation'] = {
@@ -170,34 +169,34 @@ def clean_record(record: dict) -> dict:
                     record['remediation'][field] = ''
                 elif field == 'policy_change_requested':
                     record['remediation'][field] = False
-    
+
     # Ensure description is never None or empty
     if not record.get('description'):
         record['description'] = 'Incident description not available'
-    
+
     # Ensure tags is a list
     if not isinstance(record.get('tags'), list):
         record['tags'] = []
-    
+
     # Ensure anonymized is boolean
     if 'anonymized' not in record:
         record['anonymized'] = True
-    
+
     # Ensure source is valid
     valid_sources = ['ethos-tracker-crawl', 'self-reported', 'witness-reported', 'platform-disclosure', 'academic-study', 'media-report']
     if record.get('source') not in valid_sources:
         record['source'] = 'media-report'
-    
+
     # Ensure category is valid
     valid_categories = ['RL-SEL', 'SB-OPQ', 'SS-ARB', 'CTX-RET', 'CD-IND', 'CP-DEN', 'POL-DRIFT', 'APP-DEN']
     if record.get('category') not in valid_categories:
         record['category'] = 'RL-SEL'
-    
+
     # Ensure severity is valid
     valid_severities = ['low', 'medium', 'high', 'critical']
     if record.get('severity') not in valid_severities:
         record['severity'] = 'medium'
-    
+
     # Ensure timestamps are strings
     for field in ['timestamp', 'reported_at']:
         if field in record and not isinstance(record[field], str):
@@ -206,7 +205,7 @@ def clean_record(record: dict) -> dict:
             else:
                 # If it's None or invalid, remove the field (not required by schema)
                 del record[field]
-    
+
     return record
 
 
@@ -214,17 +213,17 @@ def main():
     raw_dir = Path('data/raw')
     processed_dir = Path('data/processed')
     processed_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print("Loading raw records...")
     records = load_raw_records(raw_dir)
     print(f"Loaded {len(records)} raw records")
-    
+
     print("Cleaning records...")
     cleaned = [clean_record(r) for r in records]
-    
+
     print("Creating DataFrame...")
     df = pd.DataFrame(cleaned)
-    
+
     # Reorder columns to match schema expectation
     schema_order = [
         'incident_id', 'timestamp', 'platform', 'agent_profile',
@@ -233,13 +232,13 @@ def main():
     ]
     # Only keep columns that exist in df
     df = df[[c for c in schema_order if c in df.columns]]
-    
+
     output_path = processed_dir / 'incidents.parquet'
     df.to_parquet(output_path, index=False)
     print(f"Saved {len(df)} records to {output_path}")
-    
+
     # Print summary
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Total records: {len(df)}")
     print(f"  Platforms: {df['platform'].apply(lambda x: x['name']).nunique()}")
     print(f"  Categories: {df['category'].value_counts().to_dict()}")

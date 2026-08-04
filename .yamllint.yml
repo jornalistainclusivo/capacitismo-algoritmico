@@ -1,0 +1,21 @@
+# yamllint configuration for Capacitismo Algorítmico
+# Run: yamllint -c .yamllint.yml .
+
+extends: default
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+  document-start:
+    present: false
+  comments-indentation:
+    level: warning
+  truthy:
+    level: warning
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+  key-duplicates:
+    level: error

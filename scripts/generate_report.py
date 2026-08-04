@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Generate validation report."""
 from pathlib import Path
+
 import pandas as pd
 
 print("## Dataset Validation Report")
 print()
-print(f"Repository: jornalistainclusivo/capacitismo-algoritmico")
-print(f"Branch: master")
-print(f"Commit: latest")
+print("Repository: jornalistainclusivo/capacitismo-algoritmico")
+print("Branch: master")
+print("Commit: latest")
 print()
 
 raw_files = list(Path('data/raw').glob('*.jsonl'))

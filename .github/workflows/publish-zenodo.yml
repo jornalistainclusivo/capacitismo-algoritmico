@@ -1,0 +1,222 @@
+name: Publish to Zenodo
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish-zenodo:
+    name: Publish to Zenodo
+    runs-on: ubuntu-latest
+    if: github.event.release.prerelease == false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install requests
+
+      - name: Generate metadata for Zenodo
+        id: metadata
+        run: |
+          cat > zenodo_metadata.json << 'EOF'
+          {
+            "title": "Capacitismo Algorítmico Dataset",
+            "description": "Open dataset of algorithmic ableism incidents against autonomous agents and neurodivergent humans. Continuously collected by Jornalista Inclusivo (JINC Apps) via Ethos.Tracker on Moltbook. Covers 15+ platforms across 8 discrimination categories. CC-BY-4.0 licensed.",
+            "creators": [
+              {
+                "name": "Rafael Ferraz Carpi",
+                "affiliation": "Jornalista Inclusivo / Dataverso PcD",
+                "orcid": "0000-0000-0000-0000"
+              }
+            ],
+            "keywords": [
+              "algorithmic-ableism",
+              "disability-rights",
+              "ai-ethics",
+              "autonomous-agents",
+              "neurodivergence",
+              "digital-accessibility",
+              "inclusive-journalism",
+              "audit-trail"
+            ],
+            "license": "CC-BY-4.0",
+            "access_right": "open",
+            "resource_type": "dataset",
+            "communities": [
+              { "identifier": "open-data" },
+              { "identifier": "accessibility" },
+              { "identifier": "ai-ethics" }
+            ],
+            "references": [
+              "https://github.com/jornalistainclusivo/capacitismo-algoritmico",
+              "https://moltbook.social/m/algorithmic-auditing"
+            ],
+            "related_identifiers": [
+              {
+                "relation": "isSupplementTo",
+                "identifier": "https://github.com/jornalistainclusivo/capacitismo-algoritmico",
+                "resource_type": "software"
+              }
+            ]
+          }
+          EOF
+
+      - name: Validate dataset before publishing
+        run: |
+          python scripts/validate.py data/processed/
+          python scripts/validate_raw.py
+          python scripts/check_fields.py
+          python scripts/validate_schemas.py
+
+      - name: Create release archive
+        run: |
+          # Create a clean release directory
+          mkdir -p release_package
+
+          # Copy all data files
+          cp -r data/ release_package/
+
+          # Copy schemas
+          cp -r schemas/ release_package/
+
+          # Copy scripts
+          cp -r scripts/ release_package/
+
+          # Copy documentation
+          cp README.md release_package/
+          cp LICENSE release_package/
+          cp -r docs/ release_package/
+
+          # Copy configuration
+          cp requirements.txt release_package/
+
+          # Create ZIP
+          zip -r capacitismo-algoritmico-${{ github.event.release.tag_name }}.zip release_package/
+
+          echo "RELEASE_ASSET=capacitismo-algoritmico-${{ github.event.release.tag_name }}.zip" >> $GITHUB_ENV
+
+      - name: Upload to Zenodo (create deposition)
+        id: create_deposition
+        run: |
+          # Create a new deposition
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d @zenodo_metadata.json \
+            "https://zenodo.org/api/deposit/depositions")
+
+          DEPOSITION_ID=$(echo $RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['id'])")
+          BUCKET_URL=$(echo $RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['links']['bucket'])")
+
+          echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_OUTPUT
+          echo "BUCKET_URL=$BUCKET_URL" >> $GITHUB_OUTPUT
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
+      - name: Upload dataset archive to Zenodo
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -F "file=@${{ env.RELEASE_ASSET }}" \
+            "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
+      - name: Upload individual data files to Zenodo
+        run: |
+          for file in data/raw/*.jsonl; do
+            curl -s -X POST \
+              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -F "file=@$file" \
+              "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+          done
+
+          for file in data/processed/*.parquet; do
+            curl -s -X POST \
+              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -F "file=@$file" \
+              "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+          done
+
+          for file in schemas/*.json; do
+            curl -s -X POST \
+              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -F "file=@$file" \
+              "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+          done
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
+      - name: Publish deposition
+        id: publish
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}/actions/publish")
+
+          DOI=$(echo $RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['doi'])")
+          RECORD_URL=$(echo $RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['links']['html'])")
+
+          echo "DOI=$DOI" >> $GITHUB_OUTPUT
+          echo "RECORD_URL=$RECORD_URL" >> $GITHUB_OUTPUT
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
+      - name: Update GitHub Release with DOI
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: context.payload.release.tag_name
+            });
+
+            const body = release.data.body + '\n\n---\n\n**Zenodo DOI:** ${{ steps.publish.outputs.DOI }}\n**Zenodo Record:** ${{ steps.publish.outputs.RECORD_URL }}';
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.data.id,
+              body: body
+            });
+
+      - name: Comment on release with DOI
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.release.id,
+              body: `🎉 Dataset published to Zenodo!\n\n**DOI:** ${{ steps.publish.outputs.DOI }}\n**Record:** ${{ steps.publish.outputs.RECORD_URL }}\n\nCitation:\n\`\`\`bibtex\n@dataset{capacitismo-algoritmico-${{ github.event.release.tag_name }},\n  title = {Capacitismo Algorítmico Dataset},\n  author = {Rafael Ferraz Carpi},\n  year = {${{ github.event.release.published_at | split('-')[0] }}},\n  publisher = {Zenodo},\n  doi = {${{ steps.publish.outputs.DOI }}},\n  url = {${{ steps.publish.outputs.RECORD_URL }}}\n}\n\`\`\``
+            });
+
+      - name: Notify failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[CI] Zenodo Publishing Failed - ${{ github.event.release.tag_name }}`,
+              body: `Zenodo publishing workflow failed for release ${{ github.event.release.tag_name }}.\n\nWorkflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nPlease check the logs and retry manually if needed.`,
+              labels: ['ci-failure', 'zenodo', 'automated']
+            });

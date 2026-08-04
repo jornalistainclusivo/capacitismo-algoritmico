@@ -7,8 +7,10 @@ Usage: python scripts/validate.py data/processed/
 import json
 import sys
 from pathlib import Path
-from jsonschema import validate, ValidationError
+
+import numpy as np
 import pandas as pd
+from jsonschema import ValidationError, validate
 
 
 def validate_parquet_files(processed_dir: Path, schemas_dir: Path) -> int:
@@ -16,7 +18,7 @@ def validate_parquet_files(processed_dir: Path, schemas_dir: Path) -> int:
     errors = 0
     
     for parquet_file in processed_dir.glob("*.parquet"):
-        schema_file = schemas_dir / f"{parquet_file.stem}.json"
+        schema_file = schemas_dir / "incident.json"
         
         if not schema_file.exists():
             print(f"⚠️  No schema for {parquet_file.name}, skipping")
@@ -36,11 +38,18 @@ def validate_parquet_files(processed_dir: Path, schemas_dir: Path) -> int:
                 val = row[col]
                 if isinstance(val, (list, dict)):
                     row_dict[col] = val
+                elif isinstance(val, (np.integer, np.floating)):
+                    row_dict[col] = val.item()
+                elif isinstance(val, np.bool_):
+                    row_dict[col] = bool(val)
+                elif isinstance(val, np.ndarray):
+                    # Handle numpy arrays (like tags column)
+                    row_dict[col] = val.tolist()
                 elif isinstance(val, pd.Series) or (hasattr(val, '__iter__') and not isinstance(val, str)):
                     # Handle arrays/lists that come from parquet
                     try:
                         row_dict[col] = val.tolist() if hasattr(val, 'tolist') else list(val)
-                    except:
+                    except (AttributeError, TypeError):
                         row_dict[col] = val
                 elif pd.isna(val):
                     row_dict[col] = None
@@ -51,7 +60,7 @@ def validate_parquet_files(processed_dir: Path, schemas_dir: Path) -> int:
                     if col in ['platform', 'agent_profile', 'evidence', 'impact', 'remediation', 'tags']:
                         try:
                             row_dict[col] = json.loads(val)
-                        except:
+                        except json.JSONDecodeError:
                             row_dict[col] = val
                     else:
                         row_dict[col] = val
@@ -111,7 +120,7 @@ def check_required_fields(processed_dir: Path) -> int:
                     lambda x: x.get('architecture_hash', '')[:16] if isinstance(x, dict) else ''
                 )
                 has_agent_id_hash = True
-            except:
+            except (KeyError, AttributeError, TypeError):
                 pass
         
         missing = [f for f in required_fields if f not in df.columns]
@@ -141,7 +150,7 @@ def main():
     raw_dir = processed_dir.parent / "raw"
     schemas_dir = processed_dir.parent.parent / "schemas"
     
-    print(f"🔍 Validating dataset...")
+    print("🔍 Validating dataset...")
     print(f"   Processed: {processed_dir}")
     print(f"   Raw: {raw_dir}")
     print(f"   Schemas: {schemas_dir}")

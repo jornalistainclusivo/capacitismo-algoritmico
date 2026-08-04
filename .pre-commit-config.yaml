@@ -1,0 +1,43 @@
+# Pre-commit hooks for Capacitismo Algorítmico
+# Run: pre-commit install && pre-commit run --all-files
+
+repos:
+  # Ruff - fast Python linter/formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint.yml]
+        files: \.(yaml|yml)$
+
+  # JSON validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-json
+      - id: check-yaml
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Validate our dataset on commit (only if data/processed changed)
+  - repo: local
+    hooks:
+      - id: validate-dataset
+        name: Validate Dataset
+        entry: uv run python scripts/validate.py data/processed/
+        language: system
+        types: [file]
+        files: ^(data/processed/|schemas/|scripts/validate\.py)
+        pass_filenames: false
+        always_run: false

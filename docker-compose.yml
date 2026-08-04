@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  # Main validation service
+  validate:
+    build: .
+    container_name: capacitismo-validate
+    volumes:
+      - .:/app
+      - ./data:/app/data:ro
+    working_dir: /app
+    command: make validate-all
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Development shell
+  dev:
+    build: .
+    container_name: capacitismo-dev
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    working_dir: /app
+    command: bash
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
+
+  # Run tests only
+  test:
+    build: .
+    container_name: capacitismo-test
+    volumes:
+      - .:/app
+      - ./data:/app/data:ro
+    working_dir: /app
+    command: make test
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Run linting only
+  lint:
+    build: .
+    container_name: capacitismo-lint
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: make lint
+    environment:
+      - PYTHONUNBUFFERED=1

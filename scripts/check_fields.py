@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Check required fields in processed data."""
-import pandas as pd
 import sys
 from pathlib import Path
+
+import pandas as pd
 
 proc_dir = Path('data/processed')
 required_fields = ['incident_id', 'platform', 'category', 'agent_id_hash', 'timestamp', 'description']
@@ -20,7 +21,7 @@ for file in proc_dir.glob('*.parquet'):
                 lambda x: x.get('architecture_hash', '')[:16] if isinstance(x, dict) else ''
             )
             has_agent_id_hash = True
-        except:
+        except (KeyError, AttributeError, TypeError):
             pass
 
     missing = [f for f in required_fields if f not in df.columns]

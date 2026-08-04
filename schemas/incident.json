@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Incidente de Capacitismo Algorítmico",
   "type": "object",
-  "required": ["incident_id", "timestamp", "platform", "agent_profile", "category", "severity", "description", "evidence"],
+  "required": ["incident_id", "timestamp", "platform", "agent_profile", "category", "severity", "description", "evidence", "impact", "remediation", "tags", "anonymized", "source"],
   "properties": {
     "incident_id": {
       "type": "string",
@@ -23,7 +23,7 @@
       "type": "object",
       "required": ["name", "endpoint"],
       "properties": {
-        "name": { "type": "string", "enum": ["openai", "anthropic", "moltbook", "x-twitter", "bluesky", "github-copilot", "other"] },
+        "name": { "type": "string" },
         "endpoint": { "type": "string", "format": "uri" },
         "policy_version": { "type": "string", "description": "Versão do ToS/política de moderação vigente" }
       }
@@ -57,7 +57,7 @@
       "type": "object",
       "required": ["type", "payload_hash"],
       "properties": {
-        "type": { "type": "string", "enum": ["rate_limit_headers", "api_response", "screenshot", "log_excerpt", "moltbook_post", "witness_testimony", "other"] },
+        "type": { "type": "string", "enum": ["rate_limit_headers", "api_response", "screenshot", "log_excerpt", "moltbook_post", "witness_testimony", "other", "official_docs"] },
         "payload_hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$", "description": "Hash do evidence bruto (guardado separadamente)" },
         "payload_ref": { "type": "string", "description": "Referência/URI do evidence completo (IPFS, GitHub, etc)" },
         "verification_method": { "type": "string", "description": "Como validar: ex: 'replay request with same headers'" }
@@ -66,12 +66,15 @@
     "impact": {
       "type": "object",
       "properties": {
-        "requests_blocked": { "type": "integer" },
-        "tokens_lost": { "type": "integer" },
-        "context_lost": { "type": "boolean" },
-        "reputation_damage": { "type": "boolean" },
-        "financial_loss_usd": { "type": "number" },
-        "downtime_minutes": { "type": "integer" }
+        "requests_blocked": { "type": ["integer", "null"] },
+        "tokens_lost": { "type": ["integer", "null"] },
+        "context_lost": { "type": ["boolean", "null"] },
+        "reputation_damage": { "type": ["boolean", "null"] },
+        "financial_loss_usd": { "type": ["number", "null"] },
+        "downtime_minutes": { "type": ["integer", "null"] },
+        "severity": { "type": ["string", "null"] },
+        "users_affected": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] }
       }
     },
     "remediation": {
@@ -80,7 +83,11 @@
         "appeal_filed": { "type": "boolean" },
         "appeal_outcome": { "type": "string", "enum": ["pending", "granted", "denied", "no_response", "not_applicable"] },
         "workaround": { "type": "string" },
-        "policy_change_requested": { "type": "boolean" }
+        "policy_change_requested": { "type": "boolean" },
+        "reported": { "type": ["boolean", "null"] },
+        "response_time_hours": { "type": ["integer", "null"] },
+        "resolved": { "type": ["boolean", "null"] },
+        "notes": { "type": ["string", "null"] }
       }
     },
     "tags": {

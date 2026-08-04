@@ -36,7 +36,7 @@ help:
 # Setup
 setup:
 	uv pip install -r requirements.txt
-	uv pip install ruff yamllint hypothesis pytest
+	uv pip install -e .[dev]
 
 # Validation targets
 validate: validate-raw validate-fields validate-schema validate-report

@@ -53,7 +53,7 @@ jobs:
         id: changelog
         run: |
           # Generate changelog from conventional commits
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          PREV_TAG=$(git tag --sort=-version:refname | head -n 2 | tail -n 1 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
             git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD > CHANGELOG_RELEASE.md
           else

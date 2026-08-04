@@ -8,3 +8,7 @@ pyarrow>=14.0.0
 tqdm>=4.66.0
 python-dotenv>=1.0.0
 zenodo-client>=0.3.0
+
+# Test dependencies
+pytest>=8.0.0
+hypothesis>=6.90.0

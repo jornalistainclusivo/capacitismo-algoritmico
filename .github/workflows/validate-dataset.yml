@@ -28,37 +28,31 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
       - name: Install dependencies
-        run: uv pip install -r requirements.txt
-
-      - name: Install test dependencies
-        run: uv pip install pytest hypothesis
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Validate JSON schemas
-        run: uv run python scripts/validate.py data/processed/
+        run: python scripts/validate.py data/processed/
         env:
           PYTHONPATH: .
 
       - name: Validate raw data format
-        run: uv run python scripts/validate_raw.py
+        run: python scripts/validate_raw.py
 
       - name: Check required fields
-        run: uv run python scripts/check_fields.py
+        run: python scripts/check_fields.py
 
       - name: Validate schemas
-        run: uv run python scripts/validate_schemas.py
+        run: python scripts/validate_schemas.py
 
       - name: Run property-based tests
-        run: uv run pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short
 
       - name: Generate validation report
         if: always()
-        run: uv run python scripts/generate_report.py > validation-report.md
+        run: python scripts/generate_report.py > validation-report.md
 
       - name: Create validation summary
         if: always()

@@ -52,13 +52,8 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          # Generate changelog from conventional commits
-          PREV_TAG=$(git tag --sort=-version:refname | head -n 2 | tail -n 1 2>/dev/null || echo "")
-          if [ -n "$PREV_TAG" ]; then
-            git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD > CHANGELOG_RELEASE.md
-          else
-            git log --pretty=format:"- %s (%h)" > CHANGELOG_RELEASE.md
-          fi
+          # Generate changelog from recent commits (last 50)
+          git log --pretty=format:"- %s (%h)" -50 > CHANGELOG_RELEASE.md
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           cat CHANGELOG_RELEASE.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

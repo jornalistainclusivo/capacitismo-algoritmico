@@ -115,7 +115,7 @@ jobs:
         run: |
           # Create a new deposition
           RESPONSE=$(curl -s -X POST \
-            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -H "Authorization: Bearer ***" \
             -H "Content-Type: application/json" \
             -d @zenodo_metadata.json \
             "https://zenodo.org/api/deposit/depositions")
@@ -131,7 +131,7 @@ jobs:
       - name: Upload dataset archive to Zenodo
         run: |
           curl -s -X POST \
-            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -H "Authorization: Bearer ***" \
             -F "file=@${{ env.RELEASE_ASSET }}" \
             "${{ steps.create_deposition.outputs.BUCKET_URL }}"
         env:
@@ -141,21 +141,21 @@ jobs:
         run: |
           for file in data/raw/*.jsonl; do
             curl -s -X POST \
-              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -H "Authorization: Bearer ***" \
               -F "file=@$file" \
               "${{ steps.create_deposition.outputs.BUCKET_URL }}"
           done
 
           for file in data/processed/*.parquet; do
             curl -s -X POST \
-              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -H "Authorization: Bearer ***" \
               -F "file=@$file" \
               "${{ steps.create_deposition.outputs.BUCKET_URL }}"
           done
 
           for file in schemas/*.json; do
             curl -s -X POST \
-              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -H "Authorization: Bearer ***" \
               -F "file=@$file" \
               "${{ steps.create_deposition.outputs.BUCKET_URL }}"
           done
@@ -166,7 +166,7 @@ jobs:
         id: publish
         run: |
           RESPONSE=$(curl -s -X POST \
-            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -H "Authorization: Bearer ***" \
             -H "Content-Type: application/json" \
             "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}/actions/publish")
 

@@ -1,0 +1,60 @@
+[project]
+name = "capacitismo-algoritmico"
+version = "1.0.5"
+description = "Dataset aberto de capacitismo algorítmico"
+readme = "README.md"
+license = {text = "CC-BY-4.0"}
+authors = [
+    {name = "Rafael Ferraz Carpi", email = "rafael@jornalistainclusivo.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31.0",
+    "pydantic>=2.5.0",
+    "jsonschema>=4.20.0",
+    "pyyaml>=6.0.1",
+    "pandas>=2.1.0",
+    "pyarrow>=14.0.0",
+    "tqdm>=4.66.0",
+    "python-dotenv>=1.0.0",
+    "zenodo-client>=0.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "hypothesis>=6.100.0",
+    "ruff>=0.5.0",
+    "yamllint>=1.35.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+select = ["E", "F", "I", "W", "UP", "B", "C4", "T20"]
+ignore = ["E501", "T201"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

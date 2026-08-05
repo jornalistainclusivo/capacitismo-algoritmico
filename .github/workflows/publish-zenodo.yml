@@ -86,6 +86,30 @@ jobs:
           python scripts/check_fields.py
           python scripts/validate_schemas.py
 
+      - name: Debug Zenodo token
+        run: |
+          echo "Testing Zenodo token..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer ${ZENODO_TOKEN}" "https://zenodo.org/api/deposit/depositions")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP: $HTTP_CODE"
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Token valid - can list depositions"
+            echo "$BODY" | python -m json.tool | head -30
+          elif [ "$HTTP_CODE" -eq 401 ]; then
+            echo "❌ Token invalid/expired (401)"
+            exit 1
+          elif [ "$HTTP_CODE" -eq 403 ]; then
+            echo "❌ Token lacks permission (403)"
+            echo "$BODY" | python -m json.tool
+            exit 1
+          else
+            echo "⚠️ Unexpected response: $HTTP_CODE"
+            echo "$BODY" | python -m json.tool
+          fi
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
       - name: Create release archive
         run: |
           # Create a clean release directory

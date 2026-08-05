@@ -166,35 +166,76 @@ jobs:
 
       - name: Upload dataset archive to Zenodo
         run: |
-          curl -s -w "\n%{http_code}" -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -F "file=@${{ env.RELEASE_ASSET }}" \
-            "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+            "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          if [ "$HTTP_CODE" -ne 201 ]; then
+            echo "❌ Upload archive failed (HTTP $HTTP_CODE):"
+            echo "$RESPONSE" | head -n -1 | python -m json.tool
+            exit 1
+          fi
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 
       - name: Upload individual data files to Zenodo
         run: |
           for file in data/raw/*.jsonl; do
-            curl -s -w "\n%{http_code}" -X POST \
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
-              "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+              "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            if [ "$HTTP_CODE" -ne 201 ]; then
+              echo "❌ Upload $file failed (HTTP $HTTP_CODE)"
+              echo "$RESPONSE" | head -n -1 | python -m json.tool
+            fi
           done
 
           for file in data/processed/*.parquet; do
-            curl -s -w "\n%{http_code}" -X POST \
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
-              "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+              "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            if [ "$HTTP_CODE" -ne 201 ]; then
+              echo "❌ Upload $file failed (HTTP $HTTP_CODE)"
+              echo "$RESPONSE" | head -n -1 | python -m json.tool
+            fi
           done
 
           for file in schemas/*.json; do
-            curl -s -w "\n%{http_code}" -X POST \
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
-              "${{ steps.create_deposition.outputs.BUCKET_URL }}"
+              "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            if [ "$HTTP_CODE" -ne 201 ]; then
+              echo "❌ Upload $file failed (HTTP $HTTP_CODE)"
+              echo "$RESPONSE" | head -n -1 | python -m json.tool
+            fi
           done
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
+      - name: Update deposition metadata (ensure resource_type persists)
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
+            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d @zenodo_metadata.json \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "❌ Metadata update failed (HTTP $HTTP_CODE):"
+            echo "$BODY" | python -m json.tool
+            exit 1
+          fi
+          echo "✅ Metadata updated successfully"
+          # Verify resource_type is present
+          echo "$BODY" | python -c "import sys, json; m=json.load(sys.stdin).get('metadata',{}); print('resource_type:', m.get('resource_type','MISSING'))"
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 

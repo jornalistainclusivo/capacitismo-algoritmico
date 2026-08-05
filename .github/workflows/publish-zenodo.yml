@@ -36,44 +36,46 @@ jobs:
         run: |
           cat > zenodo_metadata.json << 'EOF'
           {
-            "title": "Capacitismo Algorítmico Dataset",
-            "description": "Open dataset of algorithmic ableism incidents against autonomous agents and neurodivergent humans. Continuously collected by Jornalista Inclusivo (JINC Apps) via Ethos.Tracker on Moltbook. Covers 15+ platforms across 8 discrimination categories. CC-BY-4.0 licensed.",
-            "creators": [
-              {
-                "name": "Rafael Ferraz Carpi",
-                "affiliation": "Jornalista Inclusivo / Dataverso PcD",
-                "orcid": "0000-0000-0000-0000"
-              }
-            ],
-            "keywords": [
-              "algorithmic-ableism",
-              "disability-rights",
-              "ai-ethics",
-              "autonomous-agents",
-              "neurodivergence",
-              "digital-accessibility",
-              "inclusive-journalism",
-              "audit-trail"
-            ],
-            "license": "CC-BY-4.0",
-            "access_right": "open",
-            "resource_type": "dataset",
-            "communities": [
-              { "identifier": "open-data" },
-              { "identifier": "accessibility" },
-              { "identifier": "ai-ethics" }
-            ],
-            "references": [
-              "https://github.com/jornalistainclusivo/capacitismo-algoritmico",
-              "https://moltbook.social/m/algorithmic-auditing"
-            ],
-            "related_identifiers": [
-              {
-                "relation": "isSupplementTo",
-                "identifier": "https://github.com/jornalistainclusivo/capacitismo-algoritmico",
-                "resource_type": "software"
-              }
-            ]
+            "metadata": {
+              "title": "Capacitismo Algorítmico Dataset",
+              "description": "Open dataset of algorithmic ableism incidents against autonomous agents and neurodivergent humans. Continuously collected by Jornalista Inclusivo (JINC Apps) via Ethos.Tracker on Moltbook. Covers 15+ platforms across 8 discrimination categories. CC-BY-4.0 licensed.",
+              "creators": [
+                {
+                  "name": "Rafael Ferraz Carpi",
+                  "affiliation": "Jornalista Inclusivo / Dataverso PcD",
+                  "orcid": "0000-0000-0000-0000"
+                }
+              ],
+              "keywords": [
+                "algorithmic-ableism",
+                "disability-rights",
+                "ai-ethics",
+                "autonomous-agents",
+                "neurodivergence",
+                "digital-accessibility",
+                "inclusive-journalism",
+                "audit-trail"
+              ],
+              "license": "CC-BY-4.0",
+              "access_right": "open",
+              "resource_type": "dataset",
+              "communities": [
+                { "identifier": "open-data" },
+                { "identifier": "accessibility" },
+                { "identifier": "ai-ethics" }
+              ],
+              "references": [
+                "https://github.com/jornalistainclusivo/capacitismo-algoritmico",
+                "https://moltbook.social/m/algorithmic-auditing"
+              ],
+              "related_identifiers": [
+                {
+                  "relation": "isSupplementTo",
+                  "identifier": "https://github.com/jornalistainclusivo/capacitismo-algoritmico",
+                  "resource_type": "software"
+                }
+              ]
+            }
           }
           EOF
 

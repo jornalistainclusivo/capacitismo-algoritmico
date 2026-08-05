@@ -34,12 +34,13 @@ jobs:
       - name: Generate metadata for Zenodo
         id: metadata
         run: |
-          cat > zenodo_metadata.json << 'EOF'
-          {
+          python - <<'PY' > zenodo_metadata.json
+          import json, datetime
+          meta = {
             "metadata": {
               "title": "Capacitismo Algorítmico Dataset",
               "upload_type": "dataset",
-              "publication_date": "$(date +%F)",
+              "publication_date": datetime.date.today().isoformat(),
               "description": "Open dataset of algorithmic ableism incidents against autonomous agents and neurodivergent humans. Continuously collected by Jornalista Inclusivo (JINC Apps) via Ethos.Tracker on Moltbook. Covers 15+ platforms across 8 discrimination categories. CC-BY-4.0 licensed.",
               "creators": [
                 {
@@ -78,7 +79,8 @@ jobs:
               ]
             }
           }
-          EOF
+          json.dump(meta, open('zenodo_metadata.json','w', encoding='utf-8'), ensure_ascii=False, indent=2)
+          PY
 
           # Debug: show generated metadata
           echo "=== Generated zenodo_metadata.json ==="

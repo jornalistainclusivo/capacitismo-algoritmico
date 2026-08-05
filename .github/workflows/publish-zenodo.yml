@@ -59,9 +59,7 @@ jobs:
               ],
               "license": "CC-BY-4.0",
               "access_right": "open",
-              "resource_type": {
-                "type": "dataset"
-              },
+              "resource_type": "dataset",
               "communities": [
                 { "identifier": "open-data" },
                 { "identifier": "accessibility" },

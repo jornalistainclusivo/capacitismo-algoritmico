@@ -24,10 +24,28 @@ def create_deposition(token, metadata_file):
     url = "https://zenodo.org/api/deposit/depositions"
     with open(metadata_file) as f:
         metadata = json.load(f)
+
+    # Normalize metadata to what Zenodo expects for creation
+    meta = metadata.get("metadata", {})
+    # Ensure upload_type exists
+    if "upload_type" not in meta:
+        meta["upload_type"] = "dataset"
+    # If resource_type is a dict (e.g. {"type":"dataset"}), convert to string
+    rt = meta.get("resource_type")
+    if isinstance(rt, dict):
+        # prefer type key, fallback to subtype or to 'dataset'
+        meta["resource_type"] = rt.get("type") or rt.get("subtype") or "dataset"
+    # Put normalized metadata back
+    metadata["metadata"] = meta
+
     resp = requests.post(url, headers=get_auth_headers(token), json=metadata)
     if resp.status_code != 201:
         print(f"❌ Failed to create deposition: {resp.status_code}")
-        print(resp.text)
+        # print full json for debugging
+        try:
+            print(json.dumps(resp.json(), indent=2, ensure_ascii=False))
+        except Exception:
+            print(resp.text)
         sys.exit(1)
     data = resp.json()
     return data["id"], data["links"]["bucket"]

@@ -24,7 +24,8 @@ def find_existing_draft(token, title_keyword="Capacitismo Algorítmico"):
         metadata = d.get("metadata", {})
         if title_keyword in metadata.get("title", ""):
             dep_id = d["id"]
-            bucket = d["links"]["bucket"]
+            # Need to fetch bucket URL separately
+            bucket = get_deposition_details(token, dep_id)["bucket"]
             return dep_id, bucket
     return None, None
 

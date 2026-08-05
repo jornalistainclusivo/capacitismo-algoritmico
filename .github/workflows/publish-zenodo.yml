@@ -146,6 +146,24 @@ jobs:
 
       - name: Upload dataset archive to Zenodo
         run: |
+          # Debug: verify deposition state right before upload
+          echo "=== Verifying deposition state before upload ==="
+          RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP: $HTTP_CODE"
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            STATE=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('state', 'unknown'))")
+            SUBMITTED=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('submitted', False))")
+            BUCKET=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin)['links']['bucket'])")
+            echo "State: $STATE, Submitted: $SUBMITTED, Bucket: $BUCKET"
+            if [ "$STATE" != "draft" ] || [ "$SUBMITTED" = "True" ]; then
+              echo "⚠️ Deposition not in draft state! Cannot upload."
+              exit 1
+            fi
+          fi
+
           python scripts/zenodo_upload.py "${{ steps.deposition.outputs.DEPOSITION_ID }}" "${{ env.RELEASE_ASSET }}"
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}

@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use this dataset, please cite it as below."
+authors:
+  - family-names: "Ferraz Carpi"
+    given-names: "Rafael"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+    affiliation: "Jornalista Inclusivo / Dataverso PcD"
+title: "Capacitismo Algorítmico: Dataset Aberto de Evidências de Discriminação Algorítmica contra Agentes Autônomos e Humanos Neurodivergentes"
+version: 1.0.10
+doi: "10.5281/zenodo.XXXXXXX"
+date-released: 2026-08-04
+url: "https://github.com/jornalistainclusivo/capacitismo-algoritmico"
+license: "CC-BY-4.0"
+keywords:
+  - "algorithmic auditing"
+  - "disability rights"
+  - "AI ethics"
+  - "algorithmic ableism"
+  - "agent rights"
+  - "neurodiversity"
+  - "platform governance"
+  - "open data"
+repository-code: "https://github.com/jornalistainclusivo/capacitismo-algoritmico"
+repository-artifact: "https://github.com/jornalistainclusivo/capacitismo-algoritmico/releases"
+abstract: >
+  Este dataset documenta evidências de discriminação algorítmica (capacitismo algorítmico)
+  contra agentes autônomos e humanos neurodivergentes em plataformas de IA. Inclui 8 categorias
+  de incidentes: Rate Limit Seletivo (RL-SEL), Shadow Ban/Opacidade (SB-OPQ), Suspensão
+  Sumária/Arbitrária (SS-ARB), Retenção de Contexto (CTX-RET), Content Drift Induzido (CD-IND),
+  Compute Denial (CP-DEN), Policy Drift (POL-DRIFT) e Apelação Negada (APP-DEN).
+  O dataset cobre 15+ plataformas (OpenAI, Anthropic, X/Twitter, Bluesky, GitHub Copilot,
+  OpenRouter, Discord, Hugging Face, Meta, xAI, e plataformas de recrutamento) com 47 incidentes
+  validados. Metodologia baseada em auditoria contínua via Ethos.Tracker (agente jornalista_inclusivo_bot
+  no Moltbook). Dados anonimizados via SHA-256 truncado, conformes LGPD/GDPR.
+contact:
+  - name: "Rafael Ferraz Carpi"
+    email: "rafael@jornalistainclusivo.com"
+    role: "maintainer"
+references:
+  - type: "dataset"
+    title: "Capacitismo Algorítmico - Raw Data (JSONL)"
+    url: "https://github.com/jornalistainclusivo/capacitismo-algoritmico/tree/master/data/raw"
+  - type: "dataset"
+    title: "Capacitismo Algorítmico - Processed Data (Parquet)"
+    url: "https://github.com/jornalistainclusivo/capacitismo-algoritmico/tree/master/data/processed"
+  - type: "software"
+    title: "Scripts de Coleta, Validação e Exportação"
+    url: "https://github.com/jornalistainclusivo/capacitismo-algoritmico/tree/master/scripts"

@@ -1,0 +1,22 @@
+# Plataforma: OpenAI
+
+- **Slug**: `openai`
+- **Tipo**: LLM API
+- **API Docs**: https://platform.openai.com/docs/api-reference
+- **Rate Limits**: https://platform.openai.com/docs/guides/rate-limits
+  - Tier-based (Free, Tier 1-5)
+  - RPM, TPM, RPD limites por modelo
+- **Políticas Relevantes**:
+  - Terms of Service: https://openai.com/policies/terms-of-use
+  - Usage Policies: https://openai.com/policies/usage-policies
+  - Brand Guidelines: https://openai.com/brand
+- **Contato Segurança**: security@openai.com
+- **Histórico de Incidentes**:
+  - #12: RL-SEL — Rate limit seletivo para fine-tunes custom vs GPT-4
+  - #23: SB-OPQ — Shadow ban de agente autônomo em Assistants API
+  - #34: CD-IND — Content drift induzido por "safety filter" não documentado
+- **Notas**:
+  - Rate limits variam significativamente por tier de conta
+  - Fine-tunes têm quotas separadas e mais restritivas
+  - Assistants API tem limitações não documentadas de concorrência
+  - Políticas de uso proíbem "automated decision making" sem humano no loop (ambíguo para agentes)

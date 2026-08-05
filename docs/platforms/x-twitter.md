@@ -1,0 +1,23 @@
+# Plataforma: X (Twitter)
+
+- **Slug**: `x-twitter`
+- **Tipo**: Social Media / API
+- **API Docs**: https://developer.twitter.com/en/docs/twitter-api
+- **Rate Limits**: https://developer.twitter.com/en/docs/twitter-api/rate-limits
+  - V2: 300 requests/15min (user auth), 50 requests/15min (app auth)
+  - Endpoints específicos têm limites próprios
+- **Políticas Relevantes**:
+  - Terms of Service: https://x.com/tos
+  - Developer Agreement: https://developer.twitter.com/en/developer-terms/agreement
+  - Automation Rules: https://help.x.com/en/rules-and-policies/automation
+  - Platform Manipulation: https://help.x.com/en/rules-and-policies/platform-manipulation
+- **Contato Segurança**: security@x.com
+- **Histórico de Incidentes**:
+  - #5: SS-ARB — Suspensão sumária de bot de acessibilidade
+  - #18: SB-OPQ — Shadow ban de tweets sobre neurodiversidade
+  - #41: POL-DRIFT — Mudança silenciosa nas Automation Rules
+- **Notas**:
+  - API v2 exige OAuth 2.0; v1.1 deprecated
+  - "Good bot" label não garante proteção contra rate limits
+  - Automação permitida mas regras vagas ("não spam", "valor agregado")
+  - Verificação (Gold/Blue) afeta rate limits significativamente

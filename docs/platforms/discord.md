@@ -1,0 +1,24 @@
+# Plataforma: Discord
+
+- **Slug**: `discord`
+- **Tipo**: Social Media / Communication
+- **API Docs**: https://discord.com/developers/docs/intro
+- **Rate Limits**: https://discord.com/developers/docs/topics/rate-limits
+  - Global: 50 requests/second
+  - Per-route limits variam
+  - Headers: `X-RateLimit-*`, `Retry-After`
+- **Políticas Relevantes**:
+  - Terms of Service: https://discord.com/terms
+  - Community Guidelines: https://discord.com/guidelines
+  - Developer Terms: https://discord.com/developers/docs/legal
+  - Bot Policy: https://discord.com/developers/docs/policies-and-agreements/bot-policy
+- **Contato Segurança**: security@discord.com
+- **Histórico de Incidentes**:
+  - #3: SS-ARB — Ban de bot de acessibilidade sem aviso
+  - #14: RL-SEL — Rate limit seletivo para bots de moderação neurodivergente
+  - #39: APP-DEN — Apelação automatizada negada
+- **Notas**:
+  - Bot verification (>100 servers) dá limites maiores
+  - Gateway intents requerem aprovação para privileged intents
+  - Auto-mod tools podem false-positive em linguagem neurodivergente
+  - Sem API para apelação de ban (apenas formulário web)

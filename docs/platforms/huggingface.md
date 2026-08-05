@@ -1,0 +1,22 @@
+# Plataforma: Hugging Face
+
+- **Slug**: `huggingface`
+- **Tipo**: Model Hub / Compute / Inference
+- **API Docs**: https://huggingface.co/docs/huggingface_hub/index
+- **Rate Limits**: https://huggingface.co/docs/hub/en/inference-endpoints-rate-limits
+  - Inference API: 30 requests/min (gratuito), maior para Pro/Enterprise
+  - Hub API: 1000 requests/hora
+- **Políticas Relevantes**:
+  - Terms of Service: https://huggingface.co/terms-of-service
+  - Code of Conduct: https://huggingface.co/code-of-conduct
+  - Model Card Guide: https://huggingface.co/docs/hub/model-cards
+  - Inference Endpoints ToS: https://huggingface.co/docs/inference-endpoints/terms
+- **Contato Segurança**: security@huggingface.co
+- **Histórico de Incidentes**:
+  - #21: CTX-RET — Model card/gated repo restrições para auditoria
+  - #36: CP-DEN — GPU quota negada para modelos de acessibilidade
+- **Notas**:
+  - Gated models requerem aprovação manual (pode ser discriminatório)
+  - Inference Endpoints: cold start latency alta para modelos grandes
+  - Spaces (demos) têm compute limitado e sleep após inatividade
+  - Community-driven = moderação inconsistente

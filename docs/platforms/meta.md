@@ -1,0 +1,24 @@
+# Plataforma: Meta (Facebook/Instagram/Threads)
+
+- **Slug**: `meta`
+- **Tipo**: Social Media / LLM (LLaMA)
+- **API Docs**: 
+  - Graph API: https://developers.facebook.com/docs/graph-api
+  - LLaMA: https://ai.meta.com/llama/
+- **Rate Limits**: https://developers.facebook.com/docs/graph-api/overview/rate-limiting
+  - App-level: 200 calls/hora/usuario
+  - Page-level: varia
+- **Políticas Relevantes**:
+  - Terms of Service: https://www.facebook.com/legal/terms
+  - Community Standards: https://transparency.fb.com/policies/community-standards
+  - Platform Terms: https://developers.facebook.com/terms
+  - LLaMA License: https://ai.meta.com/llama/license/
+- **Contato Segurança**: security@fb.com
+- **Histórico de Incidentes**:
+  - #31: POL-DRIFT — Mudança silenciosa em LLaMA license terms
+  - #42: SB-OPQ — Shadow ban de conteúdo sobre direitos de agentes
+- **Notas**:
+  - Ecossistema fechado = auditoria difícil
+  - LLaMA weights disponíveis mas license restritiva (não comercial para alguns)
+  - Threads API limitada; sem API pública para moderação
+  - Histórico de policy drift em moderação automatizada

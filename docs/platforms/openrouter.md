@@ -1,0 +1,22 @@
+# Plataforma: OpenRouter
+
+- **Slug**: `openrouter`
+- **Tipo**: LLM Gateway / Aggregator
+- **API Docs**: https://openrouter.ai/docs
+- **Rate Limits**: https://openrouter.ai/docs/limits
+  - Baseado em créditos ($/mês)
+  - Limits por modelo (provider-specific)
+  - Headers: `X-RateLimit-*`
+- **Políticas Relevantes**:
+  - Terms of Service: https://openrouter.ai/terms
+  - Privacy Policy: https://openrouter.ai/privacy
+  - Provider Policies: Cada modelo herda políticas do provider original
+- **Contato Segurança**: security@openrouter.ai
+- **Histórico de Incidentes**:
+  - #11: CP-DEN — Compute denial para modelos gratuitos vs pagos
+  - #27: POL-DRIFT — Mudança silenciosa em fallback policies
+- **Notas**:
+  - Gateway para 100+ modelos = policies inconsistentes
+  - "Free models" têm rate limits drásticos e sem SLA
+  - Fallback automático pode mudar comportamento do agente sem aviso
+  - Credits system = compute denial econômico para usuários low-budget

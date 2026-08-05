@@ -180,12 +180,54 @@ jobs:
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 
+      - name: Ensure deposition is in draft state (recreate if needed)
+        id: ensure_draft
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            STATE=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('state', 'unknown'))")
+            SUBMITTED=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('submitted', False))")
+            echo "Current state: $STATE, submitted: $SUBMITTED"
+            if [ "$STATE" != "draft" ] || [ "$SUBMITTED" = "True" ]; then
+              echo "⚠️ Deposition not in draft state, creating new one..."
+              RESPONSE2=$(curl -s -w "\n%{http_code}" -X POST \
+                -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d @zenodo_metadata.json \
+                "https://zenodo.org/api/deposit/depositions")
+              HTTP_CODE2=$(echo "$RESPONSE2" | tail -n1)
+              BODY2=$(echo "$RESPONSE2" | head -n -1)
+              if [ "$HTTP_CODE2" -ne 201 ]; then
+                echo "❌ Failed to create new deposition (HTTP $HTTP_CODE2):"
+                echo "$BODY2" | python -m json.tool
+                exit 1
+              fi
+              DEPOSITION_ID=$(echo "$BODY2" | python -c "import sys, json; print(json.load(sys.stdin)['id'])")
+              BUCKET_URL=$(echo "$BODY2" | python -c "import sys, json; print(json.load(sys.stdin)['links']['bucket'])")
+              echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_OUTPUT
+              echo "BUCKET_URL=$BUCKET_URL" >> $GITHUB_OUTPUT
+              echo "DEBUG: New deposition ID=$DEPOSITION_ID, Bucket=$BUCKET_URL"
+            else
+              echo "✅ Deposition is in draft state"
+              echo "DEPOSITION_ID=${{ steps.create_deposition.outputs.DEPOSITION_ID }}" >> $GITHUB_OUTPUT
+              echo "BUCKET_URL=${{ steps.create_deposition.outputs.BUCKET_URL }}" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ Failed to check deposition state (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
       - name: Upload dataset archive to Zenodo
         run: |
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -F "file=@${{ env.RELEASE_ASSET }}" \
-            "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+            "${{ steps.ensure_draft.outputs.BUCKET_URL }}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           if [ "$HTTP_CODE" -ne 201 ]; then
             echo "❌ Upload archive failed (HTTP $HTTP_CODE):"
@@ -201,7 +243,7 @@ jobs:
             RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
-              "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+              "${{ steps.ensure_draft.outputs.BUCKET_URL }}")
             HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
             if [ "$HTTP_CODE" -ne 201 ]; then
               echo "❌ Upload $file failed (HTTP $HTTP_CODE)"
@@ -213,7 +255,7 @@ jobs:
             RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
-              "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+              "${{ steps.ensure_draft.outputs.BUCKET_URL }}")
             HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
             if [ "$HTTP_CODE" -ne 201 ]; then
               echo "❌ Upload $file failed (HTTP $HTTP_CODE)"
@@ -225,7 +267,7 @@ jobs:
             RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
-              "${{ steps.create_deposition.outputs.BUCKET_URL }}")
+              "${{ steps.ensure_draft.outputs.BUCKET_URL }}")
             HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
             if [ "$HTTP_CODE" -ne 201 ]; then
               echo "❌ Upload $file failed (HTTP $HTTP_CODE)"
@@ -241,7 +283,7 @@ jobs:
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -H "Content-Type: application/json" \
             -d @zenodo_metadata.json \
-            "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}")
+            "https://zenodo.org/api/deposit/depositions/${{ steps.ensure_draft.outputs.DEPOSITION_ID }}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n -1)
           if [ "$HTTP_CODE" -ne 200 ]; then
@@ -260,7 +302,7 @@ jobs:
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -H "Content-Type: application/json" \
-            "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}/actions/publish")
+            "https://zenodo.org/api/deposit/depositions/${{ steps.ensure_draft.outputs.DEPOSITION_ID }}/actions/publish")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n -1)

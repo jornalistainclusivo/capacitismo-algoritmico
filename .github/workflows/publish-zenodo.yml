@@ -168,7 +168,22 @@ jobs:
             fi
           fi
 
-          python scripts/zenodo_upload.py "${{ steps.deposition.outputs.DEPOSITION_ID }}" "${{ env.RELEASE_ASSET }}"
+          # Test upload with curl directly (debug)
+          echo "=== Testing upload with curl ==="
+          ls -la "${{ env.RELEASE_ASSET }}"
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            -F "file=@${{ env.RELEASE_ASSET }}" \
+            "${BUCKET}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP: $HTTP_CODE"
+          if [ "$HTTP_CODE" -ne 201 ]; then
+            echo "❌ Upload failed (HTTP $HTTP_CODE):"
+            echo "$BODY" | python -m json.tool
+            exit 1
+          fi
+          echo "✅ Archive uploaded successfully with curl"
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 

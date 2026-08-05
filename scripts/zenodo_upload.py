@@ -4,6 +4,7 @@ Upload files to Zenodo deposition with fresh bucket URL.
 """
 import sys
 import os
+import glob
 import requests
 
 
@@ -42,8 +43,21 @@ def upload_file(token, bucket_url, file_path):
         return False
 
 
+def expand_patterns(patterns):
+    """Expand glob patterns to actual file paths."""
+    files = []
+    for pattern in patterns:
+        matches = glob.glob(pattern)
+        if matches:
+            files.extend(matches)
+        else:
+            # If no glob match, treat as literal file (might not exist yet)
+            files.append(pattern)
+    return files
+
+
 def main():
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         print("Usage: python zenodo_upload.py <deposition_id> <file1> [file2] ...")
         sys.exit(1)
 
@@ -53,7 +67,14 @@ def main():
         sys.exit(1)
 
     dep_id = sys.argv[1]
-    files = sys.argv[2:]
+    patterns = sys.argv[2:]
+
+    # Expand glob patterns
+    files = expand_patterns(patterns)
+
+    if not files:
+        print("❌ No files to upload")
+        sys.exit(1)
 
     # Get fresh bucket URL
     bucket_url = get_fresh_bucket_url(token, dep_id)

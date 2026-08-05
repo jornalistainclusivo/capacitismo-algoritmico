@@ -171,19 +171,37 @@ jobs:
           # Test upload with curl directly (debug)
           echo "=== Testing upload with curl ==="
           ls -la "${{ env.RELEASE_ASSET }}"
+          
+          # Try the deposition/files endpoint instead
+          DEPOSITION_ID="${{ steps.deposition.outputs.DEPOSITION_ID }}"
+          FILES_URL="https://zenodo.org/api/deposit/depositions/${DEPOSITION_ID}/files"
+          
+          echo "Trying files endpoint: $FILES_URL"
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -F "file=@${{ env.RELEASE_ASSET }}" \
-            "${BUCKET}")
+            "$FILES_URL")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n -1)
           echo "HTTP: $HTTP_CODE"
-          if [ "$HTTP_CODE" -ne 201 ]; then
-            echo "❌ Upload failed (HTTP $HTTP_CODE):"
-            echo "$BODY" | python -m json.tool
-            exit 1
+          if [ "$HTTP_CODE" -eq 201 ]; then
+            echo "✅ Archive uploaded successfully via /files endpoint"
+          else
+            echo "Trying bucket URL as fallback..."
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              -F "file=@${{ env.RELEASE_ASSET }}" \
+              "${BUCKET}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | head -n -1)
+            echo "HTTP: $HTTP_CODE"
+            if [ "$HTTP_CODE" -ne 201 ]; then
+              echo "❌ Upload failed (HTTP $HTTP_CODE):"
+              echo "$BODY" | python -m json.tool
+              exit 1
+            fi
+            echo "✅ Archive uploaded successfully with bucket URL"
           fi
-          echo "✅ Archive uploaded successfully with curl"
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 

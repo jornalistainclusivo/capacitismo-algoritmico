@@ -158,9 +158,25 @@ jobs:
 
           DEPOSITION_ID=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin)['id'])")
           BUCKET_URL=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin)['links']['bucket'])")
+          DEPOSITION_STATE=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('state', 'unknown'))")
+          SUBMITTED=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('submitted', False))")
 
           echo "DEPOSITION_ID=$DEPOSITION_ID" >> $GITHUB_OUTPUT
           echo "BUCKET_URL=$BUCKET_URL" >> $GITHUB_OUTPUT
+          echo "DEBUG: Deposition ID=$DEPOSITION_ID, State=$DEPOSITION_STATE, Submitted=$SUBMITTED, Bucket=$BUCKET_URL"
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+
+      - name: Debug deposition state before upload
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP: $HTTP_CODE"
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "$BODY" | python -c "import sys, json; d=json.load(sys.stdin); print('ID:', d.get('id')); print('State:', d.get('state')); print('Submitted:', d.get('submitted')); print('Bucket:', d.get('links', {}).get('bucket')); print('Files:', len(d.get('files', [])))"
+          fi
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 
@@ -234,7 +250,6 @@ jobs:
             exit 1
           fi
           echo "✅ Metadata updated successfully"
-          # Verify resource_type is present
           echo "$BODY" | python -c "import sys, json; m=json.load(sys.stdin).get('metadata',{}); print('resource_type:', m.get('resource_type','MISSING'))"
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}

@@ -147,6 +147,10 @@ jobs:
       - name: Create or get valid draft deposition
         id: deposition
         run: |
+          echo "=== zenodo_metadata.json (before create_deposition) ==="
+          cat zenodo_metadata.json
+          echo "====================================================="
+
           python scripts/zenodo_deposition.py
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
@@ -237,12 +241,28 @@ jobs:
             "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}")
           echo "Deposition payload (post-metadata):"
           echo "$RESPONSE_CHECK" | python -m json.tool || echo "$RESPONSE_CHECK"
+
+          echo "=== zenodo_metadata.json (before PUT) ==="
+          cat zenodo_metadata.json
+          echo "========================================="
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 
       - name: Publish deposition
         id: publish
         run: |
+          # Check publication_date before publish
+          echo "=== Checking publication_date present in deposition metadata ==="
+          DEP_JSON=$(curl -s -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}")
+          echo "$DEP_JSON" | jq '.metadata.publication_date' || true
+          if [ "$(echo "$DEP_JSON" | jq -r '.metadata.publication_date // empty')" = "" ]; then
+            echo "❌ publication_date missing in deposition metadata — aborting publish. Deposition JSON follows:"
+            echo "$DEP_JSON" | jq '.' || echo "$DEP_JSON"
+            exit 1
+          fi
+          echo "✅ publication_date present"
+
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -H "Content-Type: application/json" \

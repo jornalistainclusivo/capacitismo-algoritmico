@@ -23,25 +23,37 @@ def create_deposition(token, metadata_file):
     """Create new deposition with metadata."""
     url = "https://zenodo.org/api/deposit/depositions"
     with open(metadata_file) as f:
-        metadata = json.load(f)
+        payload = json.load(f)
 
-    # Normalize metadata to what Zenodo expects for creation
-    meta = metadata.get("metadata", {})
+    # Defensive normalization: ensure required fields for creation/publish
+    meta = payload.get("metadata", {})
+
     # Ensure upload_type exists
-    if "upload_type" not in meta:
+    if "upload_type" not in meta or not meta.get("upload_type"):
         meta["upload_type"] = "dataset"
-    # If resource_type is a dict (e.g. {"type":"dataset"}), convert to string
+
+    # Ensure publication_date exists (use today if missing)
+    if "publication_date" not in meta or not meta.get("publication_date"):
+        from datetime import date
+        meta["publication_date"] = date.today().isoformat()
+
+    # Normalize resource_type: if dict -> convert to string type
     rt = meta.get("resource_type")
     if isinstance(rt, dict):
-        # prefer type key, fallback to subtype or to 'dataset'
         meta["resource_type"] = rt.get("type") or rt.get("subtype") or "dataset"
-    # Put normalized metadata back
-    metadata["metadata"] = meta
+    elif not rt:
+        meta["resource_type"] = "dataset"
 
-    resp = requests.post(url, headers=get_auth_headers(token), json=metadata)
+    payload["metadata"] = meta
+
+    # DEBUG: print payload to be POSTed
+    print("=== Payload to be POSTed to create deposition ===")
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    print("=== end payload ===")
+
+    resp = requests.post(url, headers=get_auth_headers(token), json=payload)
     if resp.status_code != 201:
         print(f"❌ Failed to create deposition: {resp.status_code}")
-        # print full json for debugging
         try:
             print(json.dumps(resp.json(), indent=2, ensure_ascii=False))
         except Exception:

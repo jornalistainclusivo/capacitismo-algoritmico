@@ -38,10 +38,12 @@ jobs:
           {
             "metadata": {
               "title": "Capacitismo Algorítmico Dataset",
+              "upload_type": "dataset",
+              "publication_date": "$(date +%F)",
               "description": "Open dataset of algorithmic ableism incidents against autonomous agents and neurodivergent humans. Continuously collected by Jornalista Inclusivo (JINC Apps) via Ethos.Tracker on Moltbook. Covers 15+ platforms across 8 discrimination categories. CC-BY-4.0 licensed.",
               "creators": [
                 {
-                  "name": "Rafael Ferraz Carpi",
+                  "name": "Carpi, Rafael Ferraz",
                   "affiliation": "Jornalista Inclusivo / Dataverso PcD"
                 }
               ],
@@ -57,7 +59,9 @@ jobs:
               ],
               "license": "CC-BY-4.0",
               "access_right": "open",
-              "resource_type": "dataset",
+              "resource_type": {
+                "type": "dataset"
+              },
               "communities": [
                 { "identifier": "open-data" },
                 { "identifier": "accessibility" },
@@ -77,6 +81,11 @@ jobs:
             }
           }
           EOF
+
+          # Debug: show generated metadata
+          echo "=== Generated zenodo_metadata.json ==="
+          cat zenodo_metadata.json
+          echo "====================================="
 
       - name: Validate dataset before publishing
         run: |
@@ -168,11 +177,10 @@ jobs:
             fi
           fi
 
-          # Test upload with curl directly (debug)
-          echo "=== Testing upload with curl ==="
+          # Upload using /files endpoint
+          echo "=== Uploading archive via /files endpoint ==="
           ls -la "${{ env.RELEASE_ASSET }}"
           
-          # Use the deposition/files endpoint (works reliably)
           DEPOSITION_ID="${{ steps.deposition.outputs.DEPOSITION_ID }}"
           FILES_URL="https://zenodo.org/api/deposit/depositions/${DEPOSITION_ID}/files"
           
@@ -186,6 +194,8 @@ jobs:
           echo "HTTP: $HTTP_CODE"
           if [ "$HTTP_CODE" -ne 201 ]; then
             echo "❌ Upload failed (HTTP $HTTP_CODE):"
+            echo "RAW BODY:"
+            echo "$BODY"
             echo "$BODY" | python -m json.tool
             exit 1
           fi
@@ -201,6 +211,11 @@ jobs:
 
       - name: Update deposition metadata (ensure resource_type persists)
         run: |
+          echo "=== Updating deposition metadata ==="
+          echo "=== zenodo_metadata.json ==="
+          cat zenodo_metadata.json
+          echo "==========================="
+
           RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -210,11 +225,20 @@ jobs:
           BODY=$(echo "$RESPONSE" | head -n -1)
           if [ "$HTTP_CODE" -ne 200 ]; then
             echo "❌ Metadata update failed (HTTP $HTTP_CODE):"
-            echo "$BODY" | python -m json.tool
+            echo "RAW BODY:"
+            echo "$BODY"
+            echo "$BODY" | python -m json.tool || true
             exit 1
           fi
           echo "✅ Metadata updated successfully"
           echo "$BODY" | python -c "import sys, json; m=json.load(sys.stdin).get('metadata',{}); print('resource_type:', m.get('resource_type','MISSING'))"
+
+          # Verify deposition metadata after update
+          echo "=== Verifying deposition metadata after update ==="
+          RESPONSE_CHECK=$(curl -s -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+            "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}")
+          echo "Deposition payload (post-metadata):"
+          echo "$RESPONSE_CHECK" | python -m json.tool || echo "$RESPONSE_CHECK"
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
 
@@ -231,7 +255,9 @@ jobs:
 
           if [ "$HTTP_CODE" -ne 202 ]; then
             echo "❌ Zenodo publish error (HTTP $HTTP_CODE):"
-            echo "$BODY" | python -m json.tool
+            echo "RAW BODY:"
+            echo "$BODY"
+            echo "$BODY" | python -m json.tool || true
             exit 1
           fi
 

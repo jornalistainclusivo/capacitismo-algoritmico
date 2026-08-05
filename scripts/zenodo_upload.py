@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Upload files to Zenodo deposition with fresh bucket URL.
+Upload files to Zenodo deposition using /files endpoint.
 """
 import sys
 import os
@@ -12,27 +12,20 @@ def get_auth_headers(token):
     return {"Authorization": f"Bearer {token}"}
 
 
-def get_fresh_bucket_url(token, dep_id):
-    """Get fresh bucket URL from deposition."""
-    url = f"https://zenodo.org/api/deposit/depositions/{dep_id}"
-    resp = requests.get(url, headers=get_auth_headers(token))
-    if resp.status_code != 200:
-        print(f"❌ Failed to get deposition details: {resp.status_code}")
-        print(resp.text)
-        sys.exit(1)
-    data = resp.json()
-    return data["links"]["bucket"]
+def get_files_url(token, dep_id):
+    """Get the files endpoint URL for a deposition."""
+    return f"https://zenodo.org/api/deposit/depositions/{dep_id}/files"
 
 
-def upload_file(token, bucket_url, file_path):
-    """Upload a single file to Zenodo bucket."""
+def upload_file(token, files_url, file_path):
+    """Upload a single file to Zenodo via /files endpoint."""
     if not os.path.exists(file_path):
         print(f"⚠️ File not found: {file_path}")
         return False
 
     with open(file_path, "rb") as f:
         files = {"file": (os.path.basename(file_path), f)}
-        resp = requests.post(bucket_url, headers=get_auth_headers(token), files=files)
+        resp = requests.post(files_url, headers=get_auth_headers(token), files=files)
 
     if resp.status_code == 201:
         print(f"✅ Uploaded: {file_path}")
@@ -76,14 +69,14 @@ def main():
         print("❌ No files to upload")
         sys.exit(1)
 
-    # Get fresh bucket URL
-    bucket_url = get_fresh_bucket_url(token, dep_id)
-    print(f"Using bucket: {bucket_url}")
+    # Get files endpoint URL
+    files_url = get_files_url(token, dep_id)
+    print(f"Using files endpoint: {files_url}")
 
     # Upload all files
     failed = []
     for file_path in files:
-        if not upload_file(token, bucket_url, file_path):
+        if not upload_file(token, files_url, file_path):
             failed.append(file_path)
 
     if failed:

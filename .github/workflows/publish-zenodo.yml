@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload dataset archive to Zenodo
         run: |
-          curl -s -X POST \
+          curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -F "file=@${{ env.RELEASE_ASSET }}" \
             "${{ steps.create_deposition.outputs.BUCKET_URL }}"
@@ -177,21 +177,21 @@ jobs:
       - name: Upload individual data files to Zenodo
         run: |
           for file in data/raw/*.jsonl; do
-            curl -s -X POST \
+            curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
               "${{ steps.create_deposition.outputs.BUCKET_URL }}"
           done
 
           for file in data/processed/*.parquet; do
-            curl -s -X POST \
+            curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
               "${{ steps.create_deposition.outputs.BUCKET_URL }}"
           done
 
           for file in schemas/*.json; do
-            curl -s -X POST \
+            curl -s -w "\n%{http_code}" -X POST \
               -H "Authorization: Bearer ${ZENODO_TOKEN}" \
               -F "file=@$file" \
               "${{ steps.create_deposition.outputs.BUCKET_URL }}"
@@ -202,13 +202,28 @@ jobs:
       - name: Publish deposition
         id: publish
         run: |
-          RESPONSE=$(curl -s -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -H "Content-Type: application/json" \
             "https://zenodo.org/api/deposit/depositions/${{ steps.create_deposition.outputs.DEPOSITION_ID }}/actions/publish")
 
-          DOI=$(echo $RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['doi'])")
-          RECORD_URL=$(echo $RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['links']['html'])")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" -ne 202 ]; then
+            echo "❌ Zenodo publish error (HTTP $HTTP_CODE):"
+            echo "$BODY" | python -m json.tool
+            exit 1
+          fi
+
+          DOI=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('doi', ''))")
+          RECORD_URL=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('links', {}).get('html', ''))")
+
+          if [ -z "$DOI" ] || [ -z "$RECORD_URL" ]; then
+            echo "❌ DOI or RECORD_URL missing in response:"
+            echo "$BODY" | python -m json.tool
+            exit 1
+          fi
 
           echo "DOI=$DOI" >> $GITHUB_OUTPUT
           echo "RECORD_URL=$RECORD_URL" >> $GITHUB_OUTPUT

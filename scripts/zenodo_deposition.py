@@ -15,18 +15,7 @@ def get_auth_headers(token):
 
 def find_existing_draft(token, title_keyword="Capacitismo Algorítmico"):
     """Find existing draft deposition matching title keyword."""
-    url = "https://zenodo.org/api/deposit/depositions"
-    params = {"page": 1, "size": 20, "status": "draft"}
-    resp = requests.get(url, headers=get_auth_headers(token), params=params)
-    if resp.status_code != 200:
-        return None, None
-    for d in resp.json():
-        metadata = d.get("metadata", {})
-        if title_keyword in metadata.get("title", ""):
-            dep_id = d["id"]
-            # Need to fetch bucket URL separately
-            bucket = get_deposition_details(token, dep_id)["bucket"]
-            return dep_id, bucket
+    # Always return None to force new deposition creation (avoids file conflicts)
     return None, None
 
 

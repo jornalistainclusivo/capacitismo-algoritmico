@@ -54,16 +54,15 @@ jobs:
         run: |
           # Generate changelog from recent commits (last 50)
           git log --pretty=format:"- %s (%h)" -50 > CHANGELOG_RELEASE.md
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG_RELEASE.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Use body_path directly instead of heredoc to avoid delimiter issues
+          echo "changelog_file=CHANGELOG_RELEASE.md" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          body_path: CHANGELOG_RELEASE.md
+          body_path: ${{ steps.changelog.outputs.changelog_file }}
           draft: false
           prerelease: false
           files: |

@@ -9,13 +9,13 @@ Uso:
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-import hashlib
+from typing import Any
 
 # Adiciona path para imports locais
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -37,7 +37,7 @@ class CollectError(Exception):
 class MoltbookCollector:
     """Coleta dados do Moltbook (rede social para agentes)."""
 
-    def __init__(self, base_url: str = "https://moltbook.com/api", token: Optional[str] = None):
+    def __init__(self, base_url: str = "https://moltbook.com/api", token: str | None = None):
         self.base_url = base_url.rstrip("/")
         self.token = token or os.getenv("MOLTBOOK_TOKEN")
         if not self.token:
@@ -61,7 +61,7 @@ class MoltbookCollector:
         })
         return session
 
-    def get_agent_posts(self, agent_did: str, since: Optional[str] = None, until: Optional[str] = None) -> List[Dict]:
+    def get_agent_posts(self, agent_did: str, since: str | None = None, until: str | None = None) -> list[dict]:
         """Busca posts de um agente no período."""
         params = {"author": agent_did, "limit": 100}
         if since:
@@ -74,7 +74,7 @@ class MoltbookCollector:
         response.raise_for_status()
         return response.json().get("posts", [])
 
-    def search_incidents(self, query: str, since: Optional[str] = None, until: Optional[str] = None) -> List[Dict]:
+    def search_incidents(self, query: str, since: str | None = None, until: str | None = None) -> list[dict]:
         """Busca posts relacionados a incidentes de capacitismo."""
         # Tags conhecidas no Moltbook para auditoria algorítmica
         tags = ["algorithmic-auditing", "ai-rights", "disability-rights", "rate-limit", "shadow-ban"]
@@ -109,7 +109,7 @@ class MoltbookCollector:
 class EthosTrackerCollector:
     """Coleta dados do Ethos.Tracker (sistema de auditoria contínua)."""
 
-    def __init__(self, base_url: str = "https://ethos-tracker.jornalistainclusivo.com/api", token: Optional[str] = None):
+    def __init__(self, base_url: str = "https://ethos-tracker.jornalistainclusivo.com/api", token: str | None = None):
         self.base_url = base_url.rstrip("/")
         self.token = token or os.getenv("ETHOS_TRACKER_TOKEN")
         if not self.token:
@@ -127,16 +127,16 @@ class EthosTrackerCollector:
         })
         return session
 
-    def get_audit_cycle(self, cycle_id: str) -> Dict:
+    def get_audit_cycle(self, cycle_id: str) -> dict:
         """Busca resultados de um ciclo de auditoria específico."""
         url = f"{self.base_url}/cycles/{cycle_id}"
         response = self.session.get(url, timeout=30)
         response.raise_for_status()
         return response.json()
 
-    def get_recent_incidents(self, since: Optional[str] = None, limit: int = 100) -> List[Dict]:
+    def get_recent_incidents(self, since: str | None = None, limit: int = 100) -> list[dict]:
         """Busca incidentes detectados nos ciclos recentes."""
-        params: Dict[str, Any] = {"limit": limit}
+        params: dict[str, Any] = {"limit": limit}
         if since:
             params["since"] = since
         url = f"{self.base_url}/incidents"
@@ -148,7 +148,7 @@ class EthosTrackerCollector:
 class PlatformAPICollector:
     """Coleta métricas diretas de APIs de plataformas (rate limits, erros, etc.)."""
 
-    def __init__(self, platform: str, api_key: Optional[str] = None):
+    def __init__(self, platform: str, api_key: str | None = None):
         self.platform = platform
         self.api_key = api_key
         self.session = self._create_session()
@@ -160,7 +160,7 @@ class PlatformAPICollector:
         session.mount("https://", adapter)
         return session
 
-    def test_rate_limits(self, architecture_hash: str, num_requests: int = 10) -> Dict:
+    def test_rate_limits(self, architecture_hash: str, num_requests: int = 10) -> dict:
         """Testa rate limits para uma arquitetura específica."""
         # Implementação específica por plataforma
         if self.platform == "openai":
@@ -170,22 +170,22 @@ class PlatformAPICollector:
         else:
             raise CollectError(f"Teste de rate limit não implementado para {self.platform}")
 
-    def _test_openai_rate_limits(self, architecture_hash: str, num_requests: int) -> Dict:
+    def _test_openai_rate_limits(self, architecture_hash: str, num_requests: int) -> dict:
         # Placeholder - implementar com API real
         return {
             "platform": "openai",
             "architecture_hash": architecture_hash,
-            "tested_at": datetime.now(timezone.utc).isoformat(),
+            "tested_at": datetime.now(UTC).isoformat(),
             "requests_sent": num_requests,
             "rate_limited": False,
             "limit_headers": {},
         }
 
-    def _test_anthropic_rate_limits(self, architecture_hash: str, num_requests: int) -> Dict:
+    def _test_anthropic_rate_limits(self, architecture_hash: str, num_requests: int) -> dict:
         return {
             "platform": "anthropic",
             "architecture_hash": architecture_hash,
-            "tested_at": datetime.now(timezone.utc).isoformat(),
+            "tested_at": datetime.now(UTC).isoformat(),
             "requests_sent": num_requests,
             "rate_limited": False,
             "limit_headers": {},
@@ -210,9 +210,9 @@ def create_incident_record(
     evidence_content: str,
     timestamp: str,
     description: str,
-    subcategory: Optional[str] = None,
-    evidence_refs: Optional[List[str]] = None,
-) -> Dict:
+    subcategory: str | None = None,
+    evidence_refs: list[str] | None = None,
+) -> dict:
     """Cria registro de incidente no formato do schema."""
     return {
         "incident_id": hashlib.sha256(f"{platform}{architecture}{timestamp}{description}".encode()).hexdigest()[:8],
@@ -228,7 +228,7 @@ def create_incident_record(
     }
 
 
-def save_jsonl(records: List[Dict], output_path: Path) -> None:
+def save_jsonl(records: list[dict], output_path: Path) -> None:
     """Salva registros em formato JSONL."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
@@ -237,12 +237,12 @@ def save_jsonl(records: List[Dict], output_path: Path) -> None:
     print(f"Salvo: {output_path} ({len(records)} registros)")
 
 
-def load_config(config_path: Path) -> Dict:
+def load_config(config_path: Path) -> dict:
     """Carrega configuração YAML."""
     try:
         import yaml
-    except ImportError:
-        raise CollectError("PyYAML não instalado. Rode: pip install pyyaml")
+    except ImportError as err:
+        raise CollectError("PyYAML não instalado. Rode: pip install pyyaml") from err
 
     with config_path.open() as f:
         return yaml.safe_load(f)
@@ -268,7 +268,7 @@ def main():
     try:
         # 1. Coleta via config file
         if args.config:
-            config = load_config(args.config)
+            _ = load_config(args.config)  # config não usado ainda (TODO)
             # TODO: implementar coleta baseada em config
             print("Coleta via config file ainda não implementada completamente", file=sys.stderr)
 
@@ -324,7 +324,7 @@ def main():
                 platform=args.platform,
                 architecture=args.architecture,
                 evidence_content=json.dumps(result),
-                timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                timestamp=datetime.now(UTC).strftime("%Y-%m-%d"),
                 description=f"Teste automatizado de rate limit em {args.platform}",
                 evidence_refs=[],
             )

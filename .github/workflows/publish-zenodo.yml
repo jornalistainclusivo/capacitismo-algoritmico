@@ -158,8 +158,12 @@ jobs:
             SUBMITTED=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('submitted', False))")
             BUCKET=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin)['links']['bucket'])")
             echo "State: $STATE, Submitted: $SUBMITTED, Bucket: $BUCKET"
-            if [ "$STATE" != "draft" ] || [ "$SUBMITTED" = "True" ]; then
-              echo "⚠️ Deposition not in draft state! Cannot upload."
+            if [ "$STATE" != "draft" ] && [ "$STATE" != "unsubmitted" ]; then
+              echo "⚠️ Deposition not in draft state! State: $STATE"
+              exit 1
+            fi
+            if [ "$SUBMITTED" = "True" ]; then
+              echo "⚠️ Deposition already submitted!"
               exit 1
             fi
           fi

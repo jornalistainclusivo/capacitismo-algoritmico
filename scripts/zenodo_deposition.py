@@ -82,7 +82,9 @@ def main():
     details = get_deposition_details(token, dep_id)
     print(f"State: {details['state']}, Submitted: {details['submitted']}")
 
-    if details["state"] != "draft" or details["submitted"]:
+    # Zenodo uses "unsubmitted" for drafts not yet submitted
+    valid_draft_states = ["draft", "unsubmitted"]
+    if details["state"] not in valid_draft_states or details["submitted"]:
         print("⚠️ Not in draft state, creating new...")
         dep_id, bucket = create_deposition(token, metadata_file)
         details = get_deposition_details(token, dep_id)

@@ -182,10 +182,10 @@ jobs:
           # Upload using /files endpoint
           echo "=== Uploading archive via /files endpoint ==="
           ls -la "${{ env.RELEASE_ASSET }}"
-          
+
           DEPOSITION_ID="${{ steps.deposition.outputs.DEPOSITION_ID }}"
           FILES_URL="https://zenodo.org/api/deposit/depositions/${DEPOSITION_ID}/files"
-          
+
           echo "Using files endpoint: $FILES_URL"
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
@@ -251,40 +251,50 @@ jobs:
       - name: Publish deposition
         id: publish
         run: |
-          # Check publication_date before publish
-          echo "=== Checking publication_date present in deposition metadata ==="
-          DEP_JSON=$(curl -s -H "Authorization: Bearer ${ZENODO_TOKEN}" \
-            "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}")
-          echo "$DEP_JSON" | jq '.metadata.publication_date' || true
-          if [ "$(echo "$DEP_JSON" | jq -r '.metadata.publication_date // empty')" = "" ]; then
-            echo "❌ publication_date missing in deposition metadata — aborting publish. Deposition JSON follows:"
-            echo "$DEP_JSON" | jq '.' || echo "$DEP_JSON"
-            exit 1
-          fi
-          echo "✅ publication_date present"
+          set -euo pipefail
 
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+          # files to store response
+          HEADERS_FILE=publish_headers.txt
+          BODY_FILE=publish_body.txt
+
+          echo "=== POSTing publish action to Zenodo ==="
+          # send request, capture headers -> HEADERS_FILE, body -> BODY_FILE, and status code to HTTP_CODE
+          HTTP_CODE=$(curl -s -S -w "%{http_code}" -D "$HEADERS_FILE" -o "$BODY_FILE" -X POST \
             -H "Authorization: Bearer ${ZENODO_TOKEN}" \
             -H "Content-Type: application/json" \
             "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}/actions/publish")
 
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "=== Publish HTTP status: $HTTP_CODE ==="
+          echo "--- Response headers ---"
+          sed -n '1,200p' "$HEADERS_FILE" || true
+          echo "--- Response body (raw) ---"
+          # print raw
+          sed -n '1,4000p' "$BODY_FILE" || true
+
+          # try pretty-print JSON if possible
+          if jq -e . "$BODY_FILE" >/dev/null 2>&1; then
+            echo "--- Response body (pretty JSON) ---"
+            jq . "$BODY_FILE" || true
+          else
+            echo "(response body is not JSON or jq failed)"
+          fi
 
           if [ "$HTTP_CODE" -ne 202 ]; then
-            echo "❌ Zenodo publish error (HTTP $HTTP_CODE):"
-            echo "RAW BODY:"
-            echo "$BODY"
-            echo "$BODY" | python -m json.tool || true
+            echo "❌ Zenodo publish error (HTTP $HTTP_CODE). Aborting."
+            # Also fetch fresh GET of deposition for debugging
+            echo "=== GET deposition (post-publish attempt) for debugging ==="
+            curl -s -H "Authorization: Bearer ${ZENODO_TOKEN}" \
+              "https://zenodo.org/api/deposit/depositions/${{ steps.deposition.outputs.DEPOSITION_ID }}" | jq '.' || true
             exit 1
           fi
 
-          DOI=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('doi', ''))")
-          RECORD_URL=$(echo "$BODY" | python -c "import sys, json; print(json.load(sys.stdin).get('links', {}).get('html', ''))")
+          # On success extract DOI and RECORD_URL from BODY_FILE
+          DOI=$(jq -r '.doi // empty' "$BODY_FILE")
+          RECORD_URL=$(jq -r '.links.html // empty' "$BODY_FILE")
 
           if [ -z "$DOI" ] || [ -z "$RECORD_URL" ]; then
-            echo "❌ DOI or RECORD_URL missing in response:"
-            echo "$BODY" | python -m json.tool
+            echo "❌ DOI or RECORD_URL missing in publish response despite HTTP 202. Dumping body:"
+            cat "$BODY_FILE"
             exit 1
           fi
 
@@ -338,7 +348,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Zenodo Publication - DOI: ${{ steps.publish.outputs.DOI }}`,
-              body: `Dataset published to Zenodo via manual workflow dispatch.\n\n**DOI:** ${{ steps.publish.outputs.DOI }}\n**Record:** ${{ steps.publish.outputs.RECORD_URL }}\n\nCitation:\n\`\`\`bibtex\n@dataset{capacitismo-algoritmico-${{ env.TAG_NAME }},\n  title = {Capacitismo Algorítmico Dataset},\n  author = {Rafael Ferraz Carpi},\n  year = {${new Date().getFullYear()}},\n  publisher = {Zenodo},\n  doi = {${{ steps.publish.outputs.DOI }}},\n  url = {${{ steps.publish.outputs.RECORD_URL }}}\n}\n\`\`\`\n\n---\n*Triggered manually via workflow_dispatch*`,
+              body: `Dataset published to Zenodo via manual workflow dispatch.\n\n**DOI:** ${{ steps.publish.outputs.DOI }}\n**Record:** ${{ steps.publish.outputs.RECORD_URL }}\n\nCitation:\n\`\`\`bibtex\n@dataset{capacitismo-algoritmico-${{ env.TAG_NAME }},\n  title = {Capacitismo Algorítmico Dataset},\n  author = {Rafael Ferraz Carpi},\n  year = {${new Date().getFullYear()}},\n  publisher = {Zenodo},\n  doi = {${{ steps.publish.outputs.DOI }},\n  url = {${{ steps.publish.outputs.RECORD_URL }}}\n}\n\`\`\`\n\n---\n*Triggered manually via workflow_dispatch*`,
               labels: ['zenodo', 'published', 'automated']
             });
 

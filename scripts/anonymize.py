@@ -152,7 +152,7 @@ def anonymize_file(input_path: Path, output_path: Path) -> int:
     records_processed = 0
     errors = 0
 
-    with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:
+    with open(input_path) as infile, open(output_path, 'w') as outfile:
         for i, line in enumerate(infile, 1):
             line = line.strip()
             if not line:

@@ -1,0 +1,90 @@
+# Dependabot configuration for Capacitismo Algorítmico Dataset
+# Updates Python dependencies and GitHub Actions weekly
+
+version: 2
+updates:
+  # Python dependencies via pip/requirements.txt
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps(pip)"
+      include: "scope"
+    reviewers:
+      - "RFerraz1984"
+    assignees:
+      - "RFerraz1984"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    ignore:
+        # Ignore major version updates for core data science libraries to avoid breaking changes
+        # Uncomment and adjust as needed:
+        # - dependency-name: "pandas"
+        #   update-type: "version-update:semver-major"
+        # - dependency-name: "numpy"
+        #   update-type: "version-update:semver-major"
+        # - dependency-name: "jsonschema"
+        #   update-type: "version-update:semver-major"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(actions)"
+      include: "scope"
+    reviewers:
+      - "RFerraz1984"
+    assignees:
+      - "RFerraz1984"
+
+  # Python dev dependencies (optional deps in pyproject.toml)
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+      - "dev"
+    commit-message:
+      prefix: "deps(pip-dev)"
+      include: "scope"
+    reviewers:
+      - "RFerraz1984"
+    assignees:
+      - "RFerraz1984"
+    # Only update dev dependencies
+    groups:
+      dev-deps:
+        patterns:
+          - "pytest*"
+          - "hypothesis"
+          - "ruff"
+          - "yamllint"
+          - "mkdocs*"
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"

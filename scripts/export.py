@@ -12,7 +12,6 @@ Uso:
 import argparse
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 # Adiciona path para imports locais
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -33,7 +32,7 @@ def load_parquet(input_path: Path) -> pd.DataFrame:
     return pd.read_parquet(input_path)
 
 
-def export_csv(df: pd.DataFrame, output_path: Path, columns: Optional[List[str]] = None) -> None:
+def export_csv(df: pd.DataFrame, output_path: Path, columns: list[str] | None = None) -> None:
     """Exporta para CSV."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if columns:
@@ -42,7 +41,7 @@ def export_csv(df: pd.DataFrame, output_path: Path, columns: Optional[List[str]]
     print(f"CSV exportado: {output_path} ({len(df)} linhas, {len(df.columns)} colunas)")
 
 
-def export_parquet(df: pd.DataFrame, output_path: Path, partition_by: Optional[str] = None) -> None:
+def export_parquet(df: pd.DataFrame, output_path: Path, partition_by: str | None = None) -> None:
     """Exporta para Parquet, opcionalmente particionado."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     table = pa.Table.from_pandas(df)

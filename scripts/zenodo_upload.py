@@ -2,9 +2,10 @@
 """
 Upload files to Zenodo deposition using /files endpoint.
 """
-import sys
-import os
 import glob
+import os
+import sys
+
 import requests
 
 

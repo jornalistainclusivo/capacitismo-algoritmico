@@ -1,7 +1,7 @@
 # Makefile for Capacitismo Algorítmico Dataset
 # Provides reproducible commands for validation, ETL, and release
 
-.PHONY: help validate validate-all etl test clean lint docs release
+.PHONY: help validate validate-all etl test clean lint docs release profile
 
 # Default target
 help:
@@ -16,6 +16,7 @@ help:
 	@echo "Data Processing:"
 	@echo "  make etl             - Run ETL: raw JSONL → processed Parquet"
 	@echo "  make anonymize       - Anonymize raw data (data/raw/ → data/raw_anonymized/)"
+	@echo "  make profile         - Generate data profiling reports (HTML + JSON)"
 	@echo ""
 	@echo "Quality:"
 	@echo "  make lint            - Run linters (ruff, yamllint, jsonlint)"
@@ -68,6 +69,10 @@ etl:
 # Anonymize
 anonymize:
 	uv run python scripts/anonymize.py data/raw/ data/raw_anonymized/
+
+# Profile
+profile:
+	uv run python scripts/generate_profile.py
 
 # Linting
 lint:
@@ -129,6 +134,7 @@ clean:
 	rm -f capacitismo-algoritmico-*.zip
 	rm -f validation-report.md
 	rm -rf data/raw_anonymized/
+	rm -rf profiling-reports/
 	rm -rf __pycache__/
 	rm -rf .pytest_cache/
 	rm -rf .ruff_cache/

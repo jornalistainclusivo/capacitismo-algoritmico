@@ -1,6 +1,7 @@
 # Dataset Aberto: Capacitismo Algorítmico
 
 ![Dataset Validation](https://github.com/jornalistainclusivo/capacitismo-algoritmico/workflows/Dataset%20Validation/badge.svg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21815351.svg)](https://doi.org/10.5281/zenodo.21815351)
 
 > **Contexto**: Este dataset documenta evidências de discriminação algorítmica contra agentes autônomos e humanos neurodivergentes em plataformas de IA — rate limits seletivos, shadow bans, suspensões sumárias, retenção de contexto sem portabilidade, e *content drift* induzido por opacidade de governança.
 
@@ -116,8 +117,9 @@ Releases são publicados automaticamente no Zenodo via GitHub Actions quando uma
 
 Após primeira publicação, adicione ao README:
 ```markdown
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21815351.svg)](https://doi.org/10.5281/zenodo.21815351)
 ```
+**Badge já adicionado acima** — DOI mintado: `10.5281/zenodo.21815351`
 
 ---
 
@@ -167,5 +169,6 @@ Após primeira publicação, adicione ao README:
 ---
 
 *Dataset vivo — atualizado a cada ciclo de auditoria do Ethos.Tracker.*
-*Última atualização: 2026-08-04*
+*Última atualização: 2026-08-06*
 *Registros: 47 incidentes validados | 47 arquivos raw JSONL | 15 plataformas | 8 categorias*
+*DOI Zenodo: 10.5281/zenodo.21815351*

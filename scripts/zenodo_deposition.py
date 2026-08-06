@@ -3,9 +3,10 @@
 Zenodo deposition management script for GitHub Actions.
 Handles creating/finding draft depositions and getting fresh bucket URLs.
 """
-import sys
 import json
 import os
+import sys
+
 import requests
 
 

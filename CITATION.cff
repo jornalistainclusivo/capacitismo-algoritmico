@@ -6,9 +6,9 @@ authors:
     orcid: "https://orcid.org/0000-0000-0000-0000"
     affiliation: "Jornalista Inclusivo / Dataverso PcD"
 title: "Capacitismo Algorítmico: Dataset Aberto de Evidências de Discriminação Algorítmica contra Agentes Autônomos e Humanos Neurodivergentes"
-version: 1.0.10
-doi: "10.5281/zenodo.XXXXXXX"
-date-released: 2026-08-04
+version: 1.0.11
+doi: "10.5281/zenodo.21815351"
+date-released: 2026-08-06
 url: "https://github.com/jornalistainclusivo/capacitismo-algoritmico"
 license: "CC-BY-4.0"
 keywords:

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":prHourlyLimit2",
+    ":label(dependencies)",
+    ":enableVulnerabilityAlerts"
+  ],
+  "timezone": "America/Sao_Paulo",
+  "schedule": [
+    "every monday at 06:00"
+  ],
+  "labels": [
+    "dependencies",
+    "renovate"
+  ],
+  "assignees": [
+    "RFerraz1984"
+  ],
+  "reviewers": [
+    "RFerraz1984"
+  ],
+  "packageRules": [
+    {
+      "description": "Group Python dev dependencies",
+      "matchPackagePatterns": [
+        "^pytest",
+        "^hypothesis",
+        "^ruff",
+        "^yamllint",
+        "^mkdocs",
+        "^pydocstyle"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "python-dev-deps",
+      "schedule": [
+        "every tuesday at 06:00"
+      ]
+    },
+    {
+      "description": "Major updates for core libraries - manual review",
+      "matchPackageNames": [
+        "pandas",
+        "numpy",
+        "jsonschema",
+        "pyarrow",
+        "pydantic"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "addLabels": [
+        "major-update",
+        "needs-review"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Enable automerge for patch updates",
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Automerge minor updates for non-core packages",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "excludePackageNames": [
+        "pandas",
+        "numpy",
+        "jsonschema",
+        "pyarrow",
+        "pydantic"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    }
+  ],
+  "pip": {
+    "enabled": true,
+    "requirementsFiles": [
+      "requirements.txt"
+    ]
+  },
+  "github-actions": {
+    "enabled": true,
+    "fileMatch": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml"
+    ]
+  },
+  "regexManagers": [
+    {
+      "description": "Update uv.lock when pyproject.toml changes",
+      "fileMatch": [
+        "^pyproject\\.toml$"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=pypi depName={{depName}}\\n(?<currentVal>[^#]+)"
+      ],
+      "datasourceTemplate": "pypi"
+    }
+  ],
+  "prCreation": "not-pending",
+  "prConcurrentLimit": 5,
+  "branchConcurrentLimit": 5,
+  "rebaseWhen": "conflicted",
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "📦 Dependabot/Renovate Dashboard",
+  "dependencyDashboardHeader": "This issue tracks all dependency updates for the Capacitismo Algorítmico dataset repository.",
+  "dependencyDashboardFooter": "Managed by Renovate Bot. [Configure Renovate](https://docs.renovatebot.com/configuration-options/)."
+}

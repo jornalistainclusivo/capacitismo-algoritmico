@@ -1,10 +1,10 @@
 # Status do Plano de Ação: Repositório Referência Global DevOps — Capacitismo Algorítmico
 
-> **Última atualização**: 2026-08-06  
+> **Última atualização**: 2026-08-07  
 > **Responsável**: Hermes Agent (Jornalista Inclusivo / JINC Apps)  
-> **Branch base**: `master` (commit `247f5f9` — sincronizado com `origin/master`)  
+> **Branch base**: `master` (commit `2a71364` — sincronizado com `origin/master`)  
 > **Tags publicadas**: `v1.0.0`, `v1.0.1`, `v1.0.10`, `v1.0.11` (latest)  
-> **Branch extra**: `fix/zenodo-metadata-normalization` (correções finais Zenodo)
+> **Branch extra**: `fix/zenodo-metadata-normalization` (correções finais Zenodo — pode ser deletada)
 
 ---
 
@@ -12,8 +12,8 @@
 
 | Sprint | Status | Progresso |
 |--------|--------|-----------|
-| **Sprint 1 — CI Verde & Release Real** | ✅ **CONCLUÍDO (100%)** | Todas as validações passam; Makefile/Docker funcionando; publish-zenodo.yml separado; release.yml automatizado; CHANGELOG, CITATION.cff, CONTRIBUTING, docs completas, anonymize.py, pre-commit, tests property-based, schema unificado, **ZENODO_TOKEN configurado, publicação Zenodo funcionando (run #53 sucesso)** |
-| **Sprint 2 — DevOps Hardening** | ⚪ **Não iniciado** | Dependabot + Renovate, profiling automatizado, Data Contracts (ODCS), schema versioning, IPFS/Filecoin evidências |
+| **Sprint 1 — CI Verde & Release Real** | ✅ **CONCLUÍDO (100%)** | Todas as validações passam; Makefile/Docker funcionando; publish-zenodo.yml separado; release.yml automatizado; CHANGELOG, CITATION.cff, CONTRIBUTING, docs completas, anonymize.py, pre-commit, tests property-based, schema unificado, **ZENODO_TOKEN configurado, publicação Zenodo funcionando (run #53 sucesso), DOI mintado: `10.5281/zenodo.21815351`** |
+| **Sprint 2 — DevOps Hardening** | 🟢 **INICIADO** | **Dependabot + Renovate configurados** (commit `591491f`), profiling automatizado, Data Contracts (ODCS), schema versioning, IPFS/Filecoin evidências |
 | **Sprint 3 — Documentação & Comunidade** | ⚪ **Não iniciado** | MkDocs/GitHub Pages, PyPI package, Hugging Face Dataset Hub, Kaggle, multi-lingual READMEs, GOVERNANCE.md, Discussions/FAQ |
 
 **Dataset atual**: 47 incidentes validados | 47 arquivos raw JSONL + 47 anonimizados | 15 plataformas | 8 categorias | Schema canônico `incident.json` (singular, strict, nullable fields corrigidos)
@@ -30,11 +30,11 @@
 | 2 | Publicar `publish-zenodo.yml` separado | ✅ **Concluído** | Arquivo `.github/workflows/publish-zenodo.yml` existe (368 linhas), dispara em `release.published` + `workflow_dispatch`, usa OIDC token exchange, upload via `/files` endpoint, mint DOI, atualiza GitHub Release |
 | 3 | Unificar schemas (remover `incidents.json`) | ✅ **Concluído** | `schemas/incidents.json` **removido** (commit `247f5f9`); `schemas/incident.json` canônico ajustado com campos nullable (`impact.*`, `remediation.*` como `["boolean", "null"]`); `validate_schemas.py` corrigido |
 | 4 | Adicionar `scripts/anonymize.py` | ✅ **Concluído** | SHA-256 truncado (incident_id 8 chars, architecture_hash 16 chars), remoção PII (emails, telefones, CPFs, nomes, IPs, URLs, handles), allowlist, dry-run, batch mode, processa `data/raw/` → `data/raw_anonymized/` (47 arquivos) |
-| 5 | Configurar `ZENODO_TOKEN` + publicação real | ✅ **Concluído** | Secret configurado no GitHub; workflow `publish-zenodo.yml` rodou com sucesso em **run #53** (20h atrás, manually triggered, 1m 9s, Status: Success); **DOI mintado: `10.5281/zenodo.21815351`** |
+| 5 | Configurar `ZENODO_TOKEN` + publicação real | ✅ **Concluído** | Secret configurado no GitHub; workflow `publish-zenodo.yml` rodou com sucesso em **run #53** (2026-08-06, manually triggered, 1m 9s, Status: Success); **DOI mintado: `10.5281/zenodo.21815351`** |
 
 ---
 
-### 🟠 Prioridade Alta — Fundação DevOps — **TODAS CONCLUÍDAS**
+### 🟠 Prioridade Alta — Fundação DevOps — **TODAS CONCLUÍDAS + EXTRAS**
 
 | # | Ação | Status | Evidência |
 |---|------|--------|-----------|
@@ -43,7 +43,7 @@
 | 3 | Pre-commit Hooks (`.pre-commit-config.yaml`) | ✅ **Concluído** | Ruff (lint/format), yamllint, validate.py local, check-yaml, jsonlint; `make lint` passa (warnings apenas de line-length/truthy em workflows YAML) |
 | 4 | Makefile | ✅ **Concluído** | Targets: `validate`, `validate-all`, `validate-fast`, `validate-raw`, `validate-fields`, `validate-schema`, `validate-report`, `etl`, `anonymize`, `lint`, `test`, `docs`, `docs-serve`, `release`, `setup`, `docker-build`, `docker-run`, `docker-shell`, `clean`, `ci` |
 | 5 | Containerizado (Dockerfile + docker-compose.yml) | ✅ **Concluído** | `Dockerfile` (python:3.11-slim, uv, deps); `docker-compose.yml` serviços: `validate`, `dev`, `test`, `lint`, `etl`; `make docker-run` executa validação no container |
-| 6 | Dependabot + Renovate | 🟡 **Parcial** | Não configurado ainda (planejado Sprint 2) |
+| 6 | Dependabot + Renovate | ✅ **CONCLUÍDO** | **`renovate.json` + `.github/dependabot.yml` criados no commit `591491f` (2026-08-07)** |
 
 ---
 
@@ -54,8 +54,8 @@
 | 1 | Completar docs faltantes | ✅ **Concluído** | `docs/methodology.md`, `docs/ethics.md`, `docs/taxonomy.md` (216 linhas, 8 categorias detalhadas), `docs/contributing.md`, `docs/platforms/` (12 arquivos: anthropic, bluesky, discord, github-copilot, huggingface, meta, openai, openrouter, x-twitter, xai + outros) |
 | 2 | `CONTRIBUTING.md` na raiz + `.github/CONTRIBUTING.md` | ✅ **Concluído** | Fluxo completo: fork → branch → `new_incident.md` → `scripts/anonymize.py` → `scripts/validate.py` → PR; templates de issue em `.github/ISSUE_TEMPLATE/` (bug_report, new_incident, platform_update) |
 | 3 | Exemplos de uso | 🟡 **Parcial** | `scripts/export.py` com CLI (`--summary`, `--csv`, `--parquet`, `--by-category`, `--by-platform`, `--by-severity`); Notebooks `examples/` planejados Sprint 3 |
-| 4 | README badges completos | ✅ **Concluído** | Badge "Dataset Validation" + links para Code of Conduct, Contributing, License, Security |
-| 5 | `CITATION.cff` | ✅ **Concluído** | Metadados completos v1.2.0: autores, ORCID, DOI placeholder, keywords, license CC-BY-4.0, references, abstract PT/EN |
+| 4 | README badges completos | ✅ **Concluído** | Badge "Dataset Validation" + links para Code of Conduct, Contributing, License, Security + **badge DOI Zenodo real** |
+| 5 | `CITATION.cff` | ✅ **Concluído** | Metadados completos v1.2.0: autores, ORCID, **DOI real: `10.5281/zenodo.21815351`**, keywords, license CC-BY-4.0, references, abstract PT/EN |
 
 ---
 
@@ -66,7 +66,7 @@
 | 1 | Schema versioning (`schemas/v1/`, `schemas/v2/` + migração no `etl.py`) | ❌ **Pendente** | Sprint 2 |
 | 2 | Data Contracts (ODCS) para `incidents.parquet` + `schemas/` | ❌ **Pendente** | Sprint 2 |
 | 3 | Testes property-based (hypothesis) | ✅ **Concluído** | `tests/test_invariants.py`: 23 testes (22 estáticos + 1 property-based coverage) cobrindo: unicidade ID, enums categoria/severidade/plataforma, estrutura agent_profile/evidence/impact/remediation, timestamp ISO 8601, padrões hash, cobertura (todas 8 categorias, múltiplas plataformas), distribuição severidade |
-| 4 | Profiling automatizado (pandas-profiling / ydata-profiling no CI → artifact HTML) | ❌ **Pendente** | Sprint 2 |
+| 4 | Profiling automatizado (pandas-profiling / ydata-profiling no CI → artifact HTML) | 🟡 **Parcial** | Script `run_profiling.sh` existe; **commit `2a71364` removeu relatórios gerados do repo** (artefatos não versionados); CI artifact planejado Sprint 2 |
 | 5 | Evidências versionadas (IPFS/Filecoin) — `scripts/pin_evidence.py` | ❌ **Pendente** | Sprint 2 |
 
 ---
@@ -74,12 +74,12 @@
 ### 🟡 Prioridade Média — Comunidade & Governança
 
 | # | Ação | Status | Evidência / Notas |
-|---|----------|--------|-------------------|
+|---|------|--------|-------------------|
 | 1 | Governança aberta (`GOVERNANCE.md`) | ❌ **Pendente** | Sprint 3 (tem `CODE_OF_CONDUCT.md` e `SECURITY.md`) |
 | 2 | Issue Templates completos | ✅ **Concluído** | 3 templates: `bug_report.md`, `new_incident.md`, `platform_update.md`; faltam: `data-quality.md`, `schema-proposal.md`, `platform-request.md` (Sprint 3) |
 | 3 | Discussions + FAQ | ❌ **Pendente** | Sprint 3 |
 | 4 | Multi-lingual README | ❌ **Pendente** | Sprint 3 |
-| 5 | Citação pronta (badge "Cite this" no README) | 🟡 **Parcial** | `CITATION.cff` existe; badge "Cite this" e DOI Zenodo real pendentes — **agora com publicação real, DOI será mintado e badge pode ser adicionado** |
+| 5 | Citação pronta (badge "Cite this" no README) | ✅ **Concluído** | `CITATION.cff` existe; **badge DOI Zenodo real adicionado ao README** |
 
 ---
 
@@ -116,11 +116,23 @@
 | 15. Testes property-based (`tests/test_invariants.py`) | ✅ | `247f5f9` (23 testes passing) |
 | 16. `data/raw_anonymized/` populado (47 arquivos) | ✅ | `247f5f9` |
 | 17. `scripts/collect.py`, `export.py`, `zenodo_deposition.py`, `zenodo_upload.py` | ✅ | `247f5f9` |
-| 18. **Configurar `ZENODO_TOKEN` + testar publicação real** | ✅ | **Secret configurado; run #53 sucesso (20h atrás, 1m 9s)** |
+| 18. **Configurar `ZENODO_TOKEN` + testar publicação real** | ✅ | **Secret configurado; run #53 sucesso (2026-08-06, 1m 9s)** |
 
 ---
 
-## 🔧 Arquivos-chave — Estado Atual (Pós-Sync + Zenodo OK)
+## 🏃‍♂️ Sprint 2 — "DevOps Hardening" — **INICIADO (2026-08-07)**
+
+| Tarefa | Status | Commit/Release |
+|--------|--------|----------------|
+| 1. Configurar Dependabot (`.github/dependabot.yml`) | ✅ **Concluído** | `591491f` |
+| 2. Configurar Renovate (`renovate.json`) | ✅ **Concluído** | `591491f` |
+| 3. Profiling automatizado no CI (artifact HTML) | 🟡 **Em andamento** | Script `run_profiling.sh` existe; relatórios removidos do repo (`2a71364`) |
+| 4. Schema versioning + ODCS Data Contracts | ❌ **Pendente** | |
+| 5. Evidências versionadas (IPFS/Filecoin) | ❌ **Pendente** | |
+
+---
+
+## 🔧 Arquivos-chave — Estado Atual (Pós-Sync + Zenodo OK + Sprint 2 Iniciado)
 
 | Arquivo | Existe? | Estado |
 |---------|---------|--------|
@@ -128,6 +140,8 @@
 | `.github/workflows/release.yml` | ✅ | Completo, validação + testes + changelog + assets |
 | `.github/workflows/validate-dataset.yml` | ✅ | CI diário + PR + dispatch |
 | `.github/workflows/validate.yml` | ✅ | Release trigger + publish-zenodo job (legado, mantido) |
+| `.github/dependabot.yml` | ✅ | **Criado commit `591491f`** |
+| `renovate.json` | ✅ | **Criado commit `591491f`** |
 | `scripts/anonymize.py` | ✅ | Funcional, SHA-256 truncado, PII removal, batch, dry-run |
 | `schemas/incident.json` | ✅ | Canônico, singular, nullable fields corrigidos |
 | `schemas/incidents.json` | ❌ | **Removido** (era duplicado plural) |
@@ -148,8 +162,6 @@
 | `examples/analysis.ipynb` | ❌ | Sprint 3 |
 | `CONTRIBUTING.md` (raiz) | ✅ | Fluxo completo documentado |
 | `.github/CONTRIBUTING.md` | ✅ | Completo |
-| `.github/dependabot.yml` | ❌ | Sprint 2 |
-| `renovate.json` | ❌ | Sprint 2 |
 | `pyproject.toml` | ✅ | Build system uv, project metadata, optional deps `[dev]` |
 | `uv.lock` | ✅ | Lockfile reprodutível |
 | `tests/test_invariants.py` | ✅ | 23 testes property-based passing |
@@ -158,22 +170,24 @@
 
 ---
 
-## 📋 Próximas Ações Imediatas (Pós-Sprint 1)
+## 📋 Próximas Ações Imediatas (Pós-Sprint 1 + Sprint 2 Iniciado)
 
 1. ✅ **Obter DOI Zenodo real** do run #53 e atualizar `CITATION.cff` + badge no README — **CONCLUÍDO** (DOI: `10.5281/zenodo.21815351`)
-2. **Configurar Dependabot + Renovate** (Sprint 2)
-3. **Criar `GOVERNANCE.md`** com mantenedores, processo decisão, roadmap (Sprint 3)
-4. **Habilitar GitHub Discussions + `docs/faq.md`** (Sprint 3)
-5. **Multi-lingual READMEs** (pt-BR, es, fr) (Sprint 3)
-6. **MkDocs + GitHub Pages** para site estático (Sprint 3)
-7. **Publicar no PyPI** via `pyproject.toml` (Sprint 3)
-8. **Upload automático Hugging Face Dataset Hub** no release (Sprint 3)
-9. **Profiling automatizado no CI** (Sprint 2)
+2. ✅ **Configurar Dependabot + Renovate** — **CONCLUÍDO** (commit `591491f`)
+3. **Profiling automatizado no CI** (artifact HTML) — **Em andamento**
+4. **Criar `GOVERNANCE.md`** com mantenedores, processo decisão, roadmap (Sprint 3)
+5. **Habilitar GitHub Discussions + `docs/faq.md`** (Sprint 3)
+6. **Multi-lingual READMEs** (pt-BR, es, fr) (Sprint 3)
+7. **MkDocs + GitHub Pages** para site estático (Sprint 3)
+8. **Publicar no PyPI** via `pyproject.toml` (Sprint 3)
+9. **Upload automático Hugging Face Dataset Hub** no release (Sprint 3)
 10. **Schema versioning + ODCS Data Contracts** (Sprint 2)
+11. **Evidências versionadas (IPFS/Filecoin)** — `scripts/pin_evidence.py` (Sprint 2)
+12. **Deletar branch `fix/zenodo-metadata-normalization`** (já mergida)
 
 ---
 
-## 📈 Métricas do Dataset (Validadas em 2026-08-06)
+## 📈 Métricas do Dataset (Validadas em 2026-08-07)
 
 | Métrica | Valor |
 |---------|-------|
@@ -188,7 +202,7 @@
 | Lint (`make lint`) | ✅ PASSA (ruff clean, yamllint warnings only) |
 | Docker build | ✅ Funcional |
 | Testes property-based | ✅ 23/23 passing |
-| **Publicação Zenodo** | ✅ **Run #53 Success (20h atrás)** |
+| **Publicação Zenodo** | ✅ **Run #53 Success (2026-08-06)** |
 | **DOI Zenodo** | ✅ **`10.5281/zenodo.21815351`** |
 
 ---
@@ -199,8 +213,8 @@
 |-----|------|--------|-------|
 | `v1.0.0` | — | `9d89e23` | Release inicial (47 incidentes) |
 | `v1.0.1` | — | `055dbca` | Workflows CI + Zenodo publishing |
-| `v1.0.10` | 2 dias atrás | `ef0f2d8` | **Sprint 1 Completo** — DevOps hardening, Makefile, Docker, docs, anonymize, tests |
-| `v1.0.11` | 2 dias atrás | `ea77810` | **Latest** — Fix release.yml changelog generation (EOF delimiter), fix publish-zenodo.yml YAML syntax |
+| `v1.0.10` | 2026-08-05 | `ef0f2d8` | **Sprint 1 Completo** — DevOps hardening, Makefile, Docker, docs, anonymize, tests |
+| `v1.0.11` | 2026-08-05 | `ea77810` | **Latest** — Fix release.yml changelog generation (EOF delimiter), fix publish-zenodo.yml YAML syntax |
 
 ---
 
@@ -264,4 +278,4 @@
 
 ---
 
-*Documento vivo — atualizado para refletir estado real pós-sync com `origin/master` (commit `247f5f9`) + confirmação de publicação Zenodo via workflow run #53. Sprint 1 **100% concluído**. Pronto para Sprint 2.*
+*Documento vivo — atualizado para refletir estado real pós-sync com `origin/master` (commit `2a71364`) + confirmação de publicação Zenodo via workflow run #53 + Sprint 2 iniciado (Dependabot + Renovate). Sprint 1 **100% concluído**. Sprint 2 **em andamento**. Pronto para próximas tarefas de profiling automatizado, schema versioning, Data Contracts e IPFS.*

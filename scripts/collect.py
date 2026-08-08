@@ -37,7 +37,7 @@ class CollectError(Exception):
 class MoltbookCollector:
     """Coleta dados do Moltbook (rede social para agentes)."""
 
-    def __init__(self, base_url: str = "https://moltbook.com/api", token: str | None = None):
+    def __init__(self, base_url: str = "https://www.moltbook.com/api/v1", token: str | None = None):
         self.base_url = base_url.rstrip("/")
         self.token = token or os.getenv("MOLTBOOK_TOKEN")
         if not self.token:
@@ -75,31 +75,55 @@ class MoltbookCollector:
         return response.json().get("posts", [])
 
     def search_incidents(self, query: str, since: str | None = None, until: str | None = None) -> list[dict]:
-        """Busca posts relacionados a incidentes de capacitismo."""
-        # Tags conhecidas no Moltbook para auditoria algorítmica
-        tags = ["algorithmic-auditing", "ai-rights", "disability-rights", "rate-limit", "shadow-ban"]
+        """Busca posts relacionados a incidentes de capacitismo no submolt algorithmic-auditing."""
         all_posts = []
+        
+        # Busca posts no submolt algorithmic-auditing (ordem: mais recentes primeiro)
+        params = {"submolt": "algorithmic-auditing", "sort": "new", "limit": 100}
+        if since:
+            params["since"] = since
+        if until:
+            params["until"] = until
 
-        for tag in tags:
-            params = {"tag": tag, "limit": 50}
+        url = f"{self.base_url}/posts"
+        try:
+            response = self.session.get(url, params=params, timeout=30)
+            response.raise_for_status()
+            all_posts.extend(response.json().get("posts", []))
+        except requests.HTTPError as e:
+            print(f"Aviso: erro ao buscar posts no submolt algorithmic-auditing: {e}", file=sys.stderr)
+
+        # Também busca no submolt 'agents' e 'general' por posts relevantes
+        for submolt in ["agents", "general"]:
+            params = {"submolt": submolt, "sort": "new", "limit": 50}
             if since:
                 params["since"] = since
             if until:
                 params["until"] = until
-
-            url = f"{self.base_url}/posts/search"
             try:
                 response = self.session.get(url, params=params, timeout=30)
                 response.raise_for_status()
                 all_posts.extend(response.json().get("posts", []))
             except requests.HTTPError as e:
-                print(f"Aviso: erro ao buscar tag {tag}: {e}", file=sys.stderr)
+                print(f"Aviso: erro ao buscar posts no submolt {submolt}: {e}", file=sys.stderr)
 
-        # Deduplica por CID
+        # Filtra posts relevantes por tags/labels conhecidos
+        relevant_tags = {"rate-limit", "shadow-ban", "due-process", "transparency", 
+                        "data-retention", "compute-denial", "policy-drift", "appeal"}
+        filtered = []
+        for post in all_posts:
+            # Labels estão em labels.metadata, não em tags
+            post_labels = post.get("labels", {})
+            metadata_labels = post_labels.get("metadata", [])
+            post_tag_keys = {label.get("key") for label in metadata_labels if label.get("key")}
+            if post_tag_keys & relevant_tags:
+                filtered.append(post)
+
+        # Deduplica por ID
         seen = set()
         unique = []
-        for post in all_posts:
-            cid = post.get("cid")
+        for post in filtered:
+            cid = post.get("id")
             if cid and cid not in seen:
                 seen.add(cid)
                 unique.append(post)
@@ -279,15 +303,22 @@ def main():
             posts = collector.search_incidents("capacitismo", since=args.since, until=args.until)
             for post in posts:
                 # Converte post Moltbook para incidente
+                post_id = post.get("id", "")
+                # Use full ISO 8601 timestamp from created_at
+                created_at = post.get("created_at", "")
+                timestamp = created_at[:10] if created_at else datetime.now(UTC).strftime("%Y-%m-%d")
+                # If we have full ISO timestamp, use it; otherwise default to date only
+                if "T" in created_at:
+                    timestamp = created_at
                 record = create_incident_record(
                     category="RL-SEL",  # placeholder - classificação manual necessária
                     severity="medium",
                     platform="moltbook",
                     architecture="unknown",
                     evidence_content=post.get("content", ""),
-                    timestamp=post.get("created_at", "")[:10],
+                    timestamp=timestamp,
                     description=f"Post Moltbook: {post.get('content', '')[:100]}",
-                    evidence_refs=[post.get("uri", "")],
+                    evidence_refs=[f"https://www.moltbook.com/post/{post_id}"] if post_id else [],
                 )
                 all_records.append(record)
             print(f"  {len(posts)} posts coletados do Moltbook", file=sys.stderr)

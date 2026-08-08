@@ -3,6 +3,7 @@
 ETL script to convert raw JSONL files to validated Parquet.
 """
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -205,6 +206,12 @@ def clean_record(record: dict) -> dict:
             else:
                 # If it's None or invalid, remove the field (not required by schema)
                 del record[field]
+        elif field in record and isinstance(record[field], str):
+            # If it's a date-only string (YYYY-MM-DD), convert to full ISO 8601
+            if field == 'timestamp' and re.match(r'^\d{4}-\d{2}-\d{2}$', record[field]):
+                record[field] = record[field] + 'T00:00:00Z'
+            elif field == 'reported_at' and re.match(r'^\d{4}-\d{2}-\d{2}$', record[field]):
+                record[field] = record[field] + 'T00:00:00Z'
 
     return record
 

@@ -134,8 +134,8 @@ def test_timestamp_format(dataset):
     """Timestamp must be valid ISO 8601."""
     for ts in dataset["timestamp"]:
         assert isinstance(ts, str), f"Timestamp not string: {ts}"
-        # Basic ISO 8601 pattern check
-        assert re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:?\d{2})?$", ts), f"Invalid timestamp format: {ts}"
+        # Basic ISO 8601 pattern check (supports optional milliseconds)
+        assert re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$", ts), f"Invalid timestamp format: {ts}"
 
 
 # ===== PROPERTY-BASED TESTS (Hypothesis) =====

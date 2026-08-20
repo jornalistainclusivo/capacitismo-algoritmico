@@ -7,17 +7,26 @@ on:
       - 'data/**'
       - 'schemas/**'
       - 'scripts/**'
+      - 'tests/**'
   pull_request:
     branches: [master]
     paths:
       - 'data/**'
       - 'schemas/**'
       - 'scripts/**'
+      - 'tests/**'
   release:
     types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   validate:
+    name: Validate Dataset
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -42,6 +51,81 @@ jobs:
 
       - name: Check required fields
         run: python scripts/check_fields.py data/processed/
+
+      - name: Validate schemas
+        run: python scripts/validate_schemas.py
+
+      - name: Run property-based tests
+        run: pytest tests/ -v --tb=short
+
+      - name: Generate validation report
+        if: always()
+        run: python scripts/generate_report.py > validation-report.md
+
+      - name: Create validation summary
+        if: always()
+        run: |
+          echo "validation_status=${{ job.status }}" >> $GITHUB_OUTPUT
+          echo "report_path=validation-report.md" >> $GITHUB_OUTPUT
+
+      - name: Post validation report to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('validation-report.md', 'utf8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            })
+
+  check-links:
+    name: Check External Links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: '--verbose --max-concurrency 5'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-failure:
+    name: Notify on Failure
+    if: failure()
+    needs: [validate, check-links]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify via GitHub Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run = await github.rest.actions.getWorkflowRun({
+              owner, repo, run_id: context.runId
+            });
+            const body = `
+            ❌ **Dataset Validation Failed**
+
+            **Workflow:** ${context.workflow}
+            **Run:** #${context.runId}
+            **Branch:** ${context.ref}
+            **Commit:** ${context.sha.substring(0,7)}
+
+            [View Logs](${run.data.html_url})
+
+            Please check the validation logs and fix any issues.
+            `;
+            await github.rest.issues.create({
+              owner, repo,
+              title: `[CI] Dataset Validation Failed - ${context.ref}`,
+              body,
+              labels: ['ci-failure', 'dataset', 'automated']
+            });
 
   publish-zenodo:
     needs: validate
@@ -69,17 +153,17 @@ jobs:
           echo "title=Capacitismo Algorítmico Dataset v$VERSION" >> $GITHUB_OUTPUT
           echo "description=$(cat <<'EOF'
           Dataset aberto documentando evidências de discriminação algorítmica contra agentes autônomos e humanos neurodivergentes.
-          
+
           Contém 47 incidentes validados across 15 plataformas e 8 categorias de capacitismo algorítmico.
-          
+
           Categorias: RL-SEL (Rate Limit Seletivo), SB-OPQ (Shadow Ban/Opacidade), SS-ARB (Suspensão Sumária/Arbitrária),
           CTX-RET (Retenção de Contexto), CD-IND (Content Drift Induzido), CP-DEN (Compute Denial),
           POL-DRIFT (Policy Drift), APP-DEN (Apelação Negada).
-          
+
           Plataformas: hirevue, pymetrics, workday, linkedin, ziprecruiter, monster, greenhouse, lever,
           eightfold, icims, smartrecruiters, openai, anthropic, google, microsoft, x, discord,
           huggingface, meta, xai.
-          
+
           Metodologia: Coleta via Ethos.Tracker (agente jornalista_inclusivo_bot no Moltbook),
           anonimização com hash SHA-256, validação contra JSON Schema.
           EOF
@@ -99,6 +183,6 @@ jobs:
             --publication-date "$(date -u +%Y-%m-%d)" \
             --access-right open \
             --file data/processed/incidents.parquet \
-            --file schemas/incidents.json \
+            --file schemas/incident.json \
             --file README.md \
             --file LICENSE

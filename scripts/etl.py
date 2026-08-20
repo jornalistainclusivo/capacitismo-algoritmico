@@ -27,6 +27,26 @@ def load_raw_records(raw_dir: Path):
     return all_records
 
 
+def deduplicate_records(records: list) -> list:
+    """Deduplicate records by original incident_id (before hashing).
+    
+    Keeps the first occurrence of each incident_id.
+    """
+    seen = set()
+    unique = []
+    for r in records:
+        oid = r.get('incident_id', '')
+        if oid and oid not in seen:
+            seen.add(oid)
+            unique.append(r)
+        elif not oid:
+            # Records without incident_id - keep all (edge case)
+            unique.append(r)
+    if len(unique) < len(records):
+        print(f"⚠️  Deduplicated: {len(records)} -> {len(unique)} records ({len(records) - len(unique)} duplicates removed)")
+    return unique
+
+
 def generate_valid_architecture_hash(original_hash: str) -> str:
     """Generate a valid 16-char lowercase hex architecture_hash."""
     import hashlib
@@ -224,6 +244,9 @@ def main():
     print("Loading raw records...")
     records = load_raw_records(raw_dir)
     print(f"Loaded {len(records)} raw records")
+
+    print("Deduplicating records...")
+    records = deduplicate_records(records)
 
     print("Cleaning records...")
     cleaned = [clean_record(r) for r in records]

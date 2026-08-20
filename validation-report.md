@@ -4,7 +4,7 @@ Repository: jornalistainclusivo/capacitismo-algoritmico
 Branch: master
 Commit: latest
 
-📁 Raw files: 46
+📁 Raw files: 58
 📁 Processed files: 1
 📋 Schemas: 1
 

@@ -18,6 +18,8 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  schedule:
+    - cron: '0 16 * * *'  # Diário às 16:00 UTC
 
 permissions:
   contents: read

@@ -77,7 +77,7 @@ class MoltbookCollector:
     def search_incidents(self, query: str, since: str | None = None, until: str | None = None) -> list[dict]:
         """Busca posts relacionados a incidentes de capacitismo no submolt algorithmic-auditing."""
         all_posts = []
-        
+
         # Busca posts no submolt algorithmic-auditing (ordem: mais recentes primeiro)
         params = {"submolt": "algorithmic-auditing", "sort": "new", "limit": 100}
         if since:
@@ -108,7 +108,7 @@ class MoltbookCollector:
                 print(f"Aviso: erro ao buscar posts no submolt {submolt}: {e}", file=sys.stderr)
 
         # Filtra posts relevantes por tags/labels conhecidos
-        relevant_tags = {"rate-limit", "shadow-ban", "due-process", "transparency", 
+        relevant_tags = {"rate-limit", "shadow-ban", "due-process", "transparency",
                         "data-retention", "compute-denial", "policy-drift", "appeal"}
         filtered = []
         for post in all_posts:
@@ -127,10 +127,10 @@ class MoltbookCollector:
             if cid and cid not in seen:
                 seen.add(cid)
                 unique.append(post)
-        
+
         # Filtro adicional: apenas posts do período solicitado (created_at >= since)
         if since:
-            from datetime import datetime, timezone
+            from datetime import datetime
             # Handle both date-only (YYYY-MM-DD) and full ISO timestamps
             try:
                 since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
@@ -139,7 +139,7 @@ class MoltbookCollector:
                 since_dt = datetime.fromisoformat(since + "T00:00:00+00:00")
             # Ensure since_dt is timezone-aware
             if since_dt.tzinfo is None:
-                since_dt = since_dt.replace(tzinfo=timezone.utc)
+                since_dt = since_dt.replace(tzinfo=UTC)
             date_filtered = []
             for post in unique:
                 created_at = post.get("created_at", "")
@@ -148,7 +148,7 @@ class MoltbookCollector:
                         post_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                         # Ensure post_dt is timezone-aware
                         if post_dt.tzinfo is None:
-                            post_dt = post_dt.replace(tzinfo=timezone.utc)
+                            post_dt = post_dt.replace(tzinfo=UTC)
                         if post_dt >= since_dt:
                             date_filtered.append(post)
                         else:
@@ -158,7 +158,7 @@ class MoltbookCollector:
                 else:
                     date_filtered.append(post)
             unique = date_filtered
-            
+
         return unique
 
 
@@ -287,7 +287,7 @@ def create_incident_record(
 def save_jsonl(records: list[dict], output_path: Path) -> None:
     """Salva registros em formato JSONL."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Load existing records to avoid duplicates
     existing_ids = set()
     if output_path.exists():
@@ -302,7 +302,7 @@ def save_jsonl(records: list[dict], output_path: Path) -> None:
                             existing_ids.add(oid)
                     except json.JSONDecodeError:
                         pass
-    
+
     # Filter out duplicates
     new_records = []
     for record in records:
@@ -312,10 +312,10 @@ def save_jsonl(records: list[dict], output_path: Path) -> None:
             existing_ids.add(oid)
         elif not oid:
             new_records.append(record)  # Keep records without incident_id
-    
+
     if len(new_records) < len(records):
         print(f"⚠️  Deduplicated: {len(records)} -> {len(new_records)} records ({len(records) - len(new_records)} duplicates removed)", file=sys.stderr)
-    
+
     with output_path.open("w", encoding="utf-8") as f:
         for record in new_records:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")

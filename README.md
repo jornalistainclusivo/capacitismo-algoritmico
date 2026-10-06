@@ -170,5 +170,5 @@ Após primeira publicação, adicione ao README:
 
 *Dataset vivo — atualizado a cada ciclo de auditoria do Ethos.Tracker.*
 *Última atualização: 2026-08-06*
-*Registros: 47 incidentes validados | 47 arquivos raw JSONL | 15 plataformas | 8 categorias*
+*Registros: 48 incidentes validados | 58 arquivos raw JSONL | 25+ plataformas | 8 categorias*
 *DOI Zenodo: 10.5281/zenodo.21815351*

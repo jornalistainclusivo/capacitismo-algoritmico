@@ -29,7 +29,7 @@ def load_raw_records(raw_dir: Path):
 
 def deduplicate_records(records: list) -> list:
     """Deduplicate records by original incident_id (before hashing).
-    
+
     Keeps the first occurrence of each incident_id.
     """
     seen = set()

@@ -3,9 +3,10 @@
 Generate data profiling report using ydata-profiling.
 Run as part of CI to produce HTML artifact with dataset statistics.
 """
-import pandas as pd
 import sys
 from pathlib import Path
+
+import pandas as pd
 
 try:
     from ydata_profiling import ProfileReport
